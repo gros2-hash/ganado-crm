@@ -1,0 +1,217 @@
+<div class="crm-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+    <div class="sidebar-header">
+      <span class="logo-icon">🐄</span>
+      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item" [class.active]="activeSection === 'resumen'" (click)="setSection('resumen')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Resumen</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection === 'lotes'" (click)="setSection('lotes')">
+        <span class="nav-icon">🐂</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Lotes</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection === 'compras'" (click)="setSection('compras')">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Compras</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection === 'ventas'" (click)="setSection('ventas')">
+        <span class="nav-icon">💰</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Ventas</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="sidebarOpen">
+        <div class="avatar">{{ user?.avatar }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ user?.name }}</span>
+          <span class="user-role">{{ user?.role }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="page-title">
+        <h2 *ngIf="activeSection === 'resumen'">Panel General</h2>
+        <h2 *ngIf="activeSection === 'lotes'">Gestión de Lotes</h2>
+        <h2 *ngIf="activeSection === 'compras'">Compras</h2>
+        <h2 *ngIf="activeSection === 'ventas'">Ventas</h2>
+      </div>
+      <div class="topbar-right">
+        <span class="fecha">{{ currentDate | date:'EEEE d MMM yyyy' }}</span>
+      </div>
+    </header>
+
+    <!-- RESUMEN -->
+    <section class="content" *ngIf="activeSection === 'resumen'">
+      <div class="kpi-grid">
+        <div class="kpi-card green">
+          <div class="kpi-icon">🐄</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Cabezas activas</span>
+            <span class="kpi-value">{{ totalCabezas | number }}</span>
+            <span class="kpi-sub">en {{ lotesDisponibles }} lotes disponibles</span>
+          </div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-icon">💵</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Ventas del mes</span>
+            <span class="kpi-value">${{ facturacionMes | number }}</span>
+            <span class="kpi-sub">2 operaciones cerradas</span>
+          </div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-icon">🛒</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Compras del mes</span>
+            <span class="kpi-value">${{ comprasMes | number }}</span>
+            <span class="kpi-sub">2 lotes incorporados</span>
+          </div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-icon">📋</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Lotes en gestión</span>
+            <span class="kpi-value">{{ lotes.length }}</span>
+            <span class="kpi-sub">{{ lotes.filter(l => l.estado === 'en_proceso').length }} en proceso</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recent-section">
+        <h3>Últimos movimientos</h3>
+        <div class="mov-list">
+          <div class="mov-item" *ngFor="let m of movimientos">
+            <span class="mov-badge" [class.compra]="m.tipo === 'compra'" [class.venta]="m.tipo === 'venta'">
+              {{ m.tipo === 'compra' ? '↓ Compra' : '↑ Venta' }}
+            </span>
+            <div class="mov-info">
+              <span class="mov-lote">Lote {{ m.lote }}</span>
+              <span class="mov-contra">{{ m.contraparte }}</span>
+            </div>
+            <div class="mov-right">
+              <span class="mov-monto" [class.ingreso]="m.tipo === 'venta'" [class.egreso]="m.tipo === 'compra'">
+                {{ m.tipo === 'venta' ? '+' : '-' }}${{ m.monto | number }}
+              </span>
+              <span class="mov-fecha">{{ m.fecha }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOTES -->
+    <section class="content" *ngIf="activeSection === 'lotes'">
+      <div class="section-toolbar">
+        <span class="total-badge">{{ lotes.length }} lotes registrados</span>
+        <button class="btn-primary">+ Nuevo lote</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Raza</th>
+              <th>Campo</th>
+              <th>Cabezas</th>
+              <th>Precio/cab.</th>
+              <th>Valor total</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of lotes">
+              <td><strong>{{ l.id }}</strong></td>
+              <td>{{ l.tipo }}</td>
+              <td>{{ l.raza }}</td>
+              <td>{{ l.campo }}</td>
+              <td>{{ l.cabezas }}</td>
+              <td>${{ l.precioUnitario | number }}</td>
+              <td><strong>${{ valorLote(l) | number }}</strong></td>
+              <td>{{ l.fecha }}</td>
+              <td>
+                <span class="estado-badge" [class]="l.estado">
+                  {{ estadoLabel(l.estado) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- COMPRAS -->
+    <section class="content" *ngIf="activeSection === 'compras'">
+      <div class="section-toolbar">
+        <span class="total-badge">{{ movimientos.filter(m => m.tipo === 'compra').length }} compras registradas</span>
+        <button class="btn-primary">+ Registrar compra</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Lote</th>
+              <th>Proveedor</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of movimientos | slice:0:movimientos.length" [style.display]="m.tipo !== 'compra' ? 'none' : ''">
+              <td><strong>{{ m.lote }}</strong></td>
+              <td>{{ m.contraparte }}</td>
+              <td class="egreso">-${{ m.monto | number }}</td>
+              <td>{{ m.fecha }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VENTAS -->
+    <section class="content" *ngIf="activeSection === 'ventas'">
+      <div class="section-toolbar">
+        <span class="total-badge">{{ movimientos.filter(m => m.tipo === 'venta').length }} ventas registradas</span>
+        <button class="btn-primary">+ Registrar venta</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Lote</th>
+              <th>Comprador</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of movimientos | slice:0:movimientos.length" [style.display]="m.tipo !== 'venta' ? 'none' : ''">
+              <td><strong>{{ m.lote }}</strong></td>
+              <td>{{ m.contraparte }}</td>
+              <td class="ingreso">+${{ m.monto | number }}</td>
+              <td>{{ m.fecha }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
