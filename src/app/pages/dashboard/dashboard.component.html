@@ -24,6 +24,10 @@
         <span class="nav-icon">💰</span>
         <span class="nav-label" *ngIf="sidebarOpen">Ventas</span>
       </button>
+      <a class="nav-item" routerLink="/productores">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Productores</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -90,6 +94,16 @@
             <span class="kpi-sub">{{ lotes.filter(l => l.estado === 'en_proceso').length }} en proceso</span>
           </div>
         </div>
+        <a class="kpi-card purple kpi-link" routerLink="/productores" *ngIf="productoresStats">
+          <div class="kpi-icon">👥</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Productores CRM</span>
+            <span class="kpi-value">{{ productoresStats.total }}</span>
+            <span class="kpi-sub" [style.color]="productoresStats.sinContactarUrgente > 0 ? '#dc2626' : ''">
+              {{ productoresStats.sinContactarUrgente }} urgentes · {{ productoresStats.proximoSeguimiento }} seguimientos hoy
+            </span>
+          </div>
+        </a>
       </div>
 
       <div class="recent-section">

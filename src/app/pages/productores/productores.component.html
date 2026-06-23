@@ -1,0 +1,465 @@
+<div class="crm-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+    <div class="sidebar-header">
+      <span class="logo-icon">🐄</span>
+      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard">         <span class="nav-icon">📊</span><span class="nav-label" *ngIf="sidebarOpen">Resumen</span></a>
+      <a class="nav-item" routerLink="/lotes-compra">      <span class="nav-icon">🛒</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Compra</span></a>
+      <a class="nav-item" routerLink="/lotes-venta">       <span class="nav-icon">💰</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span></a>
+      <a class="nav-item active" routerLink="/productores"><span class="nav-icon">👥</span><span class="nav-label" *ngIf="sidebarOpen">Productores</span></a>
+      <div class="nav-sep" *ngIf="sidebarOpen">Análisis</div>
+      <a class="nav-item" routerLink="/estadisticas">      <span class="nav-icon">📈</span><span class="nav-label" *ngIf="sidebarOpen">Estadísticas</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="sidebarOpen">
+        <div class="avatar">{{ auth.getUser()?.avatar }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ auth.getUser()?.name }}</span>
+          <span class="user-role">{{ auth.getUser()?.role }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()">⏻</button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="breadcrumb">
+        <span class="bc-link" (click)="modoVista = 'lista'; seleccionado = null">Productores</span>
+        <span *ngIf="modoVista === 'ficha'"> › <strong>{{ seleccionado?.nombre }}</strong></span>
+        <span *ngIf="modoVista === 'nuevo'"> › <strong>Nuevo productor</strong></span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-nuevo" (click)="abrirNuevo()">+ Nuevo productor</button>
+      </div>
+    </header>
+
+    <!-- ═══════════════ LISTA ═══════════════ -->
+    <div class="content" *ngIf="modoVista === 'lista'">
+
+      <!-- KPIs -->
+      <div class="kpi-row" *ngIf="stats">
+        <div class="mini-kpi"><span class="mk-val">{{ stats.total }}</span><span class="mk-lbl">Total</span></div>
+        <div class="mini-kpi activo"><span class="mk-val">{{ stats.activos }}</span><span class="mk-lbl">Activos</span></div>
+        <div class="mini-kpi vendedor"><span class="mk-val">{{ stats.vendedores }}</span><span class="mk-lbl">Vendedores</span></div>
+        <div class="mini-kpi comprador"><span class="mk-val">{{ stats.compradores }}</span><span class="mk-lbl">Compradores</span></div>
+        <div class="mini-kpi potencial"><span class="mk-val">{{ stats.potenciales }}</span><span class="mk-lbl">Potenciales</span></div>
+        <div class="mini-kpi urgente"><span class="mk-val">{{ stats.sinContactarUrgente }}</span><span class="mk-lbl">Sin contactar &gt;60d</span></div>
+        <div class="mini-kpi medio"><span class="mk-val">{{ stats.sinContactarMedio }}</span><span class="mk-lbl">Sin contactar 30-60d</span></div>
+        <div class="mini-kpi seguimiento"><span class="mk-val">{{ stats.proximoSeguimiento }}</span><span class="mk-lbl">Seguimiento ≤7d</span></div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filtros-bar">
+        <input class="search-input" [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()" placeholder="🔍 Buscar por nombre, estancia, teléfono, localidad...">
+        <select class="select-filtro" [(ngModel)]="filtroCategoria" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Categoría</option>
+          <option *ngFor="let c of categorias" [value]="c.valor">{{ c.label }}</option>
+        </select>
+        <select class="select-filtro" [(ngModel)]="filtroContacto" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Último contacto</option>
+          <option value="reciente">Reciente (&lt;30 días)</option>
+          <option value="medio">Por contactar (30-60 días)</option>
+          <option value="urgente">Urgente (&gt;60 días)</option>
+        </select>
+        <select class="select-filtro" [(ngModel)]="filtroPrioridad" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Prioridad</option>
+          <option *ngFor="let p of prioridades" [value]="p.valor">{{ p.label }}</option>
+        </select>
+        <select class="select-filtro" [(ngModel)]="filtroDpto" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Departamento</option>
+          <option *ngFor="let d of dptos()" [value]="d">{{ d }}</option>
+        </select>
+        <select class="select-filtro" [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Estado</option>
+          <option *ngFor="let e of estados" [value]="e.valor">{{ e.label }}</option>
+        </select>
+        <span class="result-count">{{ filtrados.length }} productor{{ filtrados.length !== 1 ? 'es' : '' }}</span>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Productor</th>
+              <th>Categoría</th>
+              <th>Tipo</th>
+              <th>Teléfono</th>
+              <th>Ubicación</th>
+              <th>Último lote</th>
+              <th>Último contacto</th>
+              <th>Medio</th>
+              <th>Próx. seguimiento</th>
+              <th>Agente</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of filtrados" (click)="seleccionar(p)" class="clickable" [class.urgente-row]="urgencia(p) === 'urgente'">
+              <td>
+                <div class="td-productor">
+                  <div class="prod-avatar" [class]="'avatar-' + p.categoria">{{ p.nombre.charAt(0) }}{{ p.nombre.split(' ')[1]?.charAt(0) ?? '' }}</div>
+                  <div class="prod-info">
+                    <span class="prod-nombre">{{ p.nombre }}</span>
+                    <span class="prod-estancia" *ngIf="p.estancia || p.empresa">{{ p.estancia || p.empresa }}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span class="cat-badge {{ p.categoria }}">{{ categoriaLabel(p.categoria) }}</span></td>
+              <td><span class="tipo-text">{{ tipoLabel(p.tipo) }}</span></td>
+              <td>
+                <a [href]="'tel:' + p.telefono" class="tel-link" (click)="$event.stopPropagation()">📱 {{ p.telefono }}</a>
+              </td>
+              <td>
+                <div class="td-ubicacion">
+                  <span class="ubi-dpto">{{ p.departamento }}</span>
+                  <span class="ubi-local">{{ p.localidad }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="td-lote" *ngIf="p.ultimoLote">
+                  <span class="lote-id {{ p.ultimoLote.tipoOp }}">{{ p.ultimoLote.id }}</span>
+                  <span class="lote-det">{{ p.ultimoLote.cabezas }} cab · ${{ p.ultimoLote.montoTotal | number }}</span>
+                  <span class="lote-fecha">{{ p.ultimoLote.fechaOp }}</span>
+                </div>
+                <span class="no-lote" *ngIf="!p.ultimoLote">—</span>
+              </td>
+              <td>
+                <div class="td-contacto">
+                  <span class="dias-chip {{ urgencia(p) }}">{{ dias(p) }}d</span>
+                  <span class="fecha-contacto">{{ p.ultimaFechaContacto }}</span>
+                </div>
+              </td>
+              <td><span class="medio-chip">{{ medioIcon(p.ultimoMedioContacto) }} {{ medioLabel(p.ultimoMedioContacto) }}</span></td>
+              <td>
+                <span class="seguimiento-chip" *ngIf="p.proximoSeguimiento" [class.vence-pronto]="dias(p) > 0 && !!p.proximoSeguimiento">
+                  {{ p.proximoSeguimiento }}
+                </span>
+                <span class="no-lote" *ngIf="!p.proximoSeguimiento">—</span>
+              </td>
+              <td>
+                <div class="td-agente">
+                  <div class="sm-avatar">{{ p.agenteAvatar }}</div>
+                  <span>{{ p.agente }}</span>
+                </div>
+              </td>
+              <td><span class="prio-badge {{ p.prioridad }}">{{ p.prioridad.charAt(0).toUpperCase() + p.prioridad.slice(1) }}</span></td>
+              <td><span class="estado-badge {{ p.estado }}">{{ estadoLabel(p.estado) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="filtrados.length === 0">
+          <span>🔍</span><p>No se encontraron productores con ese criterio</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ FICHA ═══════════════ -->
+    <div class="content ficha-layout" *ngIf="modoVista === 'ficha' && seleccionado">
+
+      <!-- ── COLUMNA IZQUIERDA ── -->
+      <div class="ficha-col left-col">
+
+        <!-- Header productor -->
+        <div class="ficha-card prod-header-card">
+          <div class="prod-hero">
+            <div class="prod-hero-avatar {{ seleccionado.categoria }}">
+              {{ seleccionado.nombre.charAt(0) }}{{ seleccionado.nombre.split(' ')[1]?.charAt(0) ?? '' }}
+            </div>
+            <div class="prod-hero-info">
+              <h2>{{ seleccionado.nombre }}</h2>
+              <p class="prod-estancia" *ngIf="seleccionado.estancia || seleccionado.empresa">{{ seleccionado.estancia || seleccionado.empresa }}</p>
+              <p class="prod-rut" *ngIf="seleccionado.rut">RUT: {{ seleccionado.rut }}</p>
+              <div class="hero-badges">
+                <span class="cat-badge {{ seleccionado.categoria }}">{{ categoriaLabel(seleccionado.categoria) }}</span>
+                <span class="tipo-badge">{{ tipoLabel(seleccionado.tipo) }}</span>
+                <span class="estado-badge {{ seleccionado.estado }}">{{ estadoLabel(seleccionado.estado) }}</span>
+                <span class="prio-badge {{ seleccionado.prioridad }}">Prioridad {{ seleccionado.prioridad }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="dias-alerta {{ urgencia(seleccionado) }}">
+            <span class="da-num">{{ dias(seleccionado) }}</span>
+            <span class="da-lbl">días sin contactar</span>
+          </div>
+        </div>
+
+        <!-- Contacto -->
+        <div class="ficha-card">
+          <h3 class="card-title">📱 Datos de contacto</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-lbl">Teléfono</span>
+              <a [href]="'tel:' + seleccionado.telefono" class="info-val link">📞 {{ seleccionado.telefono }}</a>
+            </div>
+            <div class="info-item" *ngIf="seleccionado.telefonoAlt">
+              <span class="info-lbl">Teléfono alt.</span>
+              <a [href]="'tel:' + seleccionado.telefonoAlt" class="info-val link">📞 {{ seleccionado.telefonoAlt }}</a>
+            </div>
+            <div class="info-item" *ngIf="seleccionado.whatsapp">
+              <span class="info-lbl">WhatsApp</span>
+              <a [href]="'https://wa.me/' + seleccionado.whatsapp.replace(/\D/g,'')" target="_blank" class="info-val link">💬 {{ seleccionado.whatsapp }}</a>
+            </div>
+            <div class="info-item" *ngIf="seleccionado.email">
+              <span class="info-lbl">Email</span>
+              <a [href]="'mailto:' + seleccionado.email" class="info-val link">📧 {{ seleccionado.email }}</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ubicación -->
+        <div class="ficha-card">
+          <h3 class="card-title">📍 Ubicación</h3>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-lbl">Departamento</span><span class="info-val font-bold">{{ seleccionado.departamento }}</span></div>
+            <div class="info-item"><span class="info-lbl">Localidad</span><span class="info-val">{{ seleccionado.localidad }}</span></div>
+            <div class="info-item full" *ngIf="seleccionado.direccionCampo"><span class="info-lbl">Dirección campo</span><span class="info-val">{{ seleccionado.direccionCampo }}</span></div>
+            <div class="info-item" *ngIf="seleccionado.hectareas"><span class="info-lbl">Superficie</span><span class="info-val">{{ seleccionado.hectareas | number }} há</span></div>
+          </div>
+        </div>
+
+        <!-- Perfil comercial -->
+        <div class="ficha-card">
+          <h3 class="card-title">📊 Perfil comercial</h3>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-lbl">Categoría CRM</span>
+              <span class="info-val"><span class="cat-badge {{ seleccionado.categoria }}">{{ categoriaLabel(seleccionado.categoria) }}</span></span>
+            </div>
+            <div class="info-item" *ngIf="seleccionado.volumenAnualCabezas"><span class="info-lbl">Volumen anual</span><span class="info-val font-big">~{{ seleccionado.volumenAnualCabezas }} cab/año</span></div>
+            <div class="info-item" *ngIf="seleccionado.precioPromedioHistorico"><span class="info-lbl">Precio promedio hist.</span><span class="info-val">${{ seleccionado.precioPromedioHistorico | number }}</span></div>
+            <div class="info-item" *ngIf="seleccionado.totalOperaciones"><span class="info-lbl">Total operaciones</span><span class="info-val font-big">{{ seleccionado.totalOperaciones }}</span></div>
+            <div class="info-item" *ngIf="seleccionado.montoTotalComercializado"><span class="info-lbl">Monto total comerc.</span><span class="info-val green">${{ seleccionado.montoTotalComercializado | number }}</span></div>
+          </div>
+          <div class="tags-row" *ngIf="seleccionado.tiposGanado?.length">
+            <span class="info-lbl">Tipos que maneja:</span>
+            <div class="tag-list">
+              <span class="tag" *ngFor="let t of seleccionado.tiposGanado">{{ t }}</span>
+            </div>
+          </div>
+          <div class="tags-row" *ngIf="seleccionado.razasPreferidas?.length">
+            <span class="info-lbl">Razas preferidas:</span>
+            <div class="tag-list">
+              <span class="tag raza" *ngFor="let r of seleccionado.razasPreferidas">{{ r }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Último lote -->
+        <div class="ficha-card" *ngIf="seleccionado.ultimoLote">
+          <h3 class="card-title">📦 Último lote comercializado</h3>
+          <div class="ultimo-lote-card {{ seleccionado.ultimoLote.tipoOp }}">
+            <div class="ul-header">
+              <span class="ul-id">{{ seleccionado.ultimoLote.id }}</span>
+              <span class="ul-op-badge {{ seleccionado.ultimoLote.tipoOp }}">
+                {{ seleccionado.ultimoLote.tipoOp === 'venta' ? '↑ Vendió a nosotros' : '↓ Compró de nosotros' }}
+              </span>
+            </div>
+            <div class="ul-body">
+              <div class="ul-item"><span class="ul-lbl">Tipo</span><span class="ul-val">{{ seleccionado.ultimoLote.tipoGanado }}</span></div>
+              <div class="ul-item"><span class="ul-lbl">Raza</span><span class="ul-val">{{ seleccionado.ultimoLote.raza }}</span></div>
+              <div class="ul-item"><span class="ul-lbl">Cabezas</span><span class="ul-val font-big">{{ seleccionado.ultimoLote.cabezas }}</span></div>
+              <div class="ul-item"><span class="ul-lbl">Monto total</span><span class="ul-val green font-big">${{ seleccionado.ultimoLote.montoTotal | number }}</span></div>
+              <div class="ul-item"><span class="ul-lbl">Fecha operación</span><span class="ul-val">{{ seleccionado.ultimoLote.fechaOp }}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Etiquetas -->
+        <div class="ficha-card" *ngIf="seleccionado.tags?.length || seleccionado.observaciones">
+          <h3 class="card-title">🏷️ Etiquetas y notas</h3>
+          <div class="tag-list" *ngIf="seleccionado.tags?.length">
+            <span class="tag free" *ngFor="let t of seleccionado.tags">{{ t }}</span>
+          </div>
+          <p class="obs-text" *ngIf="seleccionado.observaciones">{{ seleccionado.observaciones }}</p>
+        </div>
+      </div>
+
+      <!-- ── COLUMNA DERECHA ── -->
+      <div class="ficha-col right-col">
+
+        <!-- CRM tracking -->
+        <div class="ficha-card tracking-card">
+          <h3 class="card-title">🎯 Seguimiento CRM</h3>
+          <div class="tracking-grid">
+            <div class="track-item">
+              <span class="track-lbl">Agente asignado</span>
+              <div class="track-agente">
+                <div class="sm-avatar-lg">{{ seleccionado.agenteAvatar }}</div>
+                <span>{{ seleccionado.agente }}</span>
+              </div>
+            </div>
+            <div class="track-item">
+              <span class="track-lbl">Prioridad</span>
+              <span class="prio-badge-lg {{ seleccionado.prioridad }}">{{ seleccionado.prioridad.charAt(0).toUpperCase() + seleccionado.prioridad.slice(1) }}</span>
+            </div>
+            <div class="track-item">
+              <span class="track-lbl">Último contacto</span>
+              <div>
+                <div class="track-fecha">{{ medioIcon(seleccionado.ultimoMedioContacto) }} {{ seleccionado.ultimaFechaContacto }}</div>
+                <div class="track-sub" *ngIf="seleccionado.motivoUltimoContacto">{{ seleccionado.motivoUltimoContacto }}</div>
+              </div>
+            </div>
+            <div class="track-item" *ngIf="seleccionado.proximoSeguimiento">
+              <span class="track-lbl">Próximo seguimiento</span>
+              <span class="seg-date">📅 {{ seleccionado.proximoSeguimiento }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Registrar nuevo contacto -->
+        <div class="ficha-card">
+          <h3 class="card-title">➕ Registrar contacto</h3>
+          <div class="reg-form">
+            <div class="medio-selector">
+              <button class="medio-btn" *ngFor="let m of mediosContacto"
+                      [class.active]="contactoMedio === m.valor"
+                      (click)="contactoMedio = m.valor">
+                {{ m.icon }} {{ m.label }}
+              </button>
+            </div>
+            <textarea class="contact-textarea" [(ngModel)]="contactoResumen"
+                      placeholder="Resumí el resultado del contacto..."></textarea>
+            <button class="btn-registrar" (click)="registrarContacto()" [disabled]="!contactoResumen.trim()">
+              ✅ Registrar contacto
+            </button>
+          </div>
+        </div>
+
+        <!-- Historial de contactos -->
+        <div class="ficha-card">
+          <h3 class="card-title">🕐 Historial de contactos</h3>
+          <div class="historial-empty" *ngIf="!seleccionado.historialContactos?.length">
+            <p>Sin historial registrado.</p>
+          </div>
+          <div class="historial-list">
+            <div class="hist-item" *ngFor="let h of seleccionado.historialContactos">
+              <div class="hist-line"></div>
+              <div class="hist-dot {{ h.medio }}"></div>
+              <div class="hist-content">
+                <div class="hist-header">
+                  <span class="hist-medio">{{ medioIcon(h.medio) }} {{ medioLabel(h.medio) }}</span>
+                  <span class="hist-fecha">{{ h.fecha }}</span>
+                  <span class="hist-agente">{{ h.agente }}</span>
+                </div>
+                <p class="hist-resumen">{{ h.resumen }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /right-col -->
+    </div><!-- /ficha-layout -->
+
+    <!-- ═══════════════ NUEVO ═══════════════ -->
+    <div class="content" *ngIf="modoVista === 'nuevo'">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Nuevo Productor</h2>
+          <p>Completá los datos. El ID se asigna automáticamente.</p>
+        </div>
+
+        <div class="success-msg" *ngIf="formGuardado">✅ Productor guardado. Redirigiendo a la ficha...</div>
+
+        <div class="form-grid" *ngIf="!formGuardado">
+
+          <div class="form-section">
+            <h3>👤 Datos personales</h3>
+            <div class="field-row">
+              <div class="field"><label>Nombre completo *</label><input type="text" [(ngModel)]="nuevo.nombre" placeholder="Juan Fernández"></div>
+              <div class="field"><label>Estancia / Empresa</label><input type="text" [(ngModel)]="nuevo.estancia" placeholder="Est. La Querencia"></div>
+              <div class="field"><label>RUT / CI</label><input type="text" [(ngModel)]="nuevo.rut" placeholder="21.456.789-0"></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>🏷️ Categoría y tipo</h3>
+            <div class="field-row">
+              <div class="field"><label>Categoría CRM *</label>
+                <select [(ngModel)]="nuevo.categoria">
+                  <option *ngFor="let c of categorias" [value]="c.valor">{{ c.label }}</option>
+                </select>
+              </div>
+              <div class="field"><label>Tipo de productor *</label>
+                <select [(ngModel)]="nuevo.tipo">
+                  <option *ngFor="let t of tiposProductor" [value]="t.valor">{{ t.label }}</option>
+                </select>
+              </div>
+              <div class="field"><label>Estado</label>
+                <select [(ngModel)]="nuevo.estado">
+                  <option *ngFor="let e of estados" [value]="e.valor">{{ e.label }}</option>
+                </select>
+              </div>
+              <div class="field"><label>Prioridad</label>
+                <select [(ngModel)]="nuevo.prioridad">
+                  <option *ngFor="let p of prioridades" [value]="p.valor">{{ p.label }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>📱 Contacto</h3>
+            <div class="field-row">
+              <div class="field"><label>Teléfono *</label><input type="tel" [(ngModel)]="nuevo.telefono" placeholder="+598 99 123 456"></div>
+              <div class="field"><label>Teléfono alternativo</label><input type="tel" [(ngModel)]="nuevo.telefonoAlt" placeholder="+598 98 987 654"></div>
+              <div class="field"><label>WhatsApp</label><input type="tel" [(ngModel)]="nuevo.whatsapp" placeholder="+598 99 123 456"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Email</label><input type="email" [(ngModel)]="nuevo.email" placeholder="productor@campo.uy"></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>📍 Ubicación</h3>
+            <div class="field-row">
+              <div class="field"><label>Departamento *</label>
+                <select [(ngModel)]="nuevo.departamento">
+                  <option value="">Seleccioná...</option>
+                  <option *ngFor="let d of departamentos" [value]="d">{{ d }}</option>
+                </select>
+              </div>
+              <div class="field"><label>Localidad *</label><input type="text" [(ngModel)]="nuevo.localidad" placeholder="Tacuarembó"></div>
+              <div class="field"><label>Hectáreas</label><input type="number" [(ngModel)]="nuevo.hectareas" placeholder="800"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Dirección del campo</label><input type="text" [(ngModel)]="nuevo.direccionCampo" placeholder="Ruta 5 km 312"></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>🐄 Perfil comercial</h3>
+            <div class="field-row">
+              <div class="field"><label>Volumen anual (cabezas)</label><input type="number" [(ngModel)]="nuevo.volumenAnualCabezas" placeholder="300"></div>
+              <div class="field"><label>Precio promedio histórico ($)</label><input type="number" [(ngModel)]="nuevo.precioPromedioHistorico" placeholder="1850"></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>📝 Observaciones</h3>
+            <div class="field">
+              <label>Notas internas</label>
+              <textarea [(ngModel)]="nuevo.observaciones" placeholder="Preferencias de contacto, condiciones especiales, etc."></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-cancel" (click)="modoVista = 'lista'">Cancelar</button>
+            <button class="btn-guardar" (click)="guardarNuevo()">💾 Guardar productor</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

@@ -1,30 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService, User } from '../../auth/auth.service';
+import { ProductoresService } from '../../services/productores.service';
 
 interface Lote {
-  id: string;
-  tipo: string;
-  cabezas: number;
-  precioUnitario: number;
-  estado: 'disponible' | 'vendido' | 'en_proceso';
-  fecha: string;
-  campo: string;
-  raza: string;
+  id: string; tipo: string; cabezas: number; precioUnitario: number;
+  estado: 'disponible' | 'vendido' | 'en_proceso'; fecha: string; campo: string; raza: string;
 }
 
 interface Movimiento {
-  tipo: 'compra' | 'venta';
-  lote: string;
-  monto: number;
-  fecha: string;
-  contraparte: string;
+  tipo: 'compra' | 'venta'; lote: string; monto: number; fecha: string; contraparte: string;
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -33,6 +25,7 @@ export class DashboardComponent implements OnInit {
   activeSection = 'resumen';
   sidebarOpen = true;
   currentDate = new Date();
+  productoresStats: ReturnType<ProductoresService['getStats']> | null = null;
 
   lotes: Lote[] = [
     { id: 'L-001', tipo: 'Novillos', cabezas: 120, precioUnitario: 1850, estado: 'disponible', fecha: '2024-11-02', campo: 'Est. La Querencia', raza: 'Hereford' },
@@ -49,35 +42,24 @@ export class DashboardComponent implements OnInit {
     { tipo: 'venta',  lote: 'L-002', monto: 78200,  fecha: '2024-11-08', contraparte: 'Exp. Montevideo' },
   ];
 
-  get totalCabezas(): number {
-    return this.lotes.filter(l => l.estado !== 'vendido').reduce((s, l) => s + l.cabezas, 0);
-  }
+  get totalCabezas(): number    { return this.lotes.filter(l => l.estado !== 'vendido').reduce((s, l) => s + l.cabezas, 0); }
+  get lotesDisponibles(): number { return this.lotes.filter(l => l.estado === 'disponible').length; }
+  get facturacionMes(): number   { return this.movimientos.filter(m => m.tipo === 'venta').reduce((s, m) => s + m.monto, 0); }
+  get comprasMes(): number       { return this.movimientos.filter(m => m.tipo === 'compra').reduce((s, m) => s + m.monto, 0); }
 
-  get lotesDisponibles(): number {
-    return this.lotes.filter(l => l.estado === 'disponible').length;
-  }
-
-  get facturacionMes(): number {
-    return this.movimientos.filter(m => m.tipo === 'venta').reduce((s, m) => s + m.monto, 0);
-  }
-
-  get comprasMes(): number {
-    return this.movimientos.filter(m => m.tipo === 'compra').reduce((s, m) => s + m.monto, 0);
-  }
+  constructor(private auth: AuthService, private productoresSvc: ProductoresService) {}
 
   ngOnInit(): void {
     this.user = this.auth.getUser();
+    this.productoresStats = this.productoresSvc.getStats();
   }
-
-  constructor(private auth: AuthService) {}
 
   setSection(s: string): void { this.activeSection = s; }
 
   estadoLabel(e: string): string {
-    return { disponible: 'Disponible', vendido: 'Vendido', en_proceso: 'En proceso' }[e] ?? e;
+    return ({ disponible: 'Disponible', vendido: 'Vendido', en_proceso: 'En proceso' } as Record<string,string>)[e] ?? e;
   }
 
   valorLote(l: Lote): number { return l.cabezas * l.precioUnitario; }
-
   logout(): void { this.auth.logout(); }
 }
