@@ -24,15 +24,17 @@
         <span class="nav-icon">💰</span>
         <span class="nav-label" *ngIf="sidebarOpen">Ventas</span>
       </button>
-<<<<<<< HEAD
       <a class="nav-item" routerLink="/lotes-compra">
         <span class="nav-icon">📋</span>
         <span class="nav-label" *ngIf="sidebarOpen">Lotes de Compra</span>
-=======
+      </a>
+      <a class="nav-item" routerLink="/lotes-venta">
+        <span class="nav-icon">📤</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span>
+      </a>
       <a class="nav-item" routerLink="/productores">
         <span class="nav-icon">👥</span>
         <span class="nav-label" *ngIf="sidebarOpen">Productores</span>
->>>>>>> develop
       </a>
     </nav>
 
@@ -106,6 +108,14 @@
             <span class="kpi-label">Lotes de Compra CRM</span>
             <span class="kpi-value">{{ lotesCompraStats.total }}</span>
             <span class="kpi-sub">{{ lotesCompraStats.deChatbot }} vía chatbot · {{ lotesCompraStats.negociacion }} en negociación</span>
+          </div>
+        </a>
+        <a class="kpi-card amber kpi-link" routerLink="/lotes-venta" *ngIf="ventasStats">
+          <div class="kpi-icon">📤</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Lotes de Venta CRM</span>
+            <span class="kpi-value">{{ ventasStats.total }}</span>
+            <span class="kpi-sub">{{ ventasStats.disponible }} disponibles · margen ${{ ventasStats.margenTotal | number }}</span>
           </div>
         </a>
         <a class="kpi-card purple kpi-link" routerLink="/productores" *ngIf="productoresStats">
