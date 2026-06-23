@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService, User } from '../../auth/auth.service';
+import { LotesCompraService } from '../../services/lotes-compra.service';
 
 interface Lote {
   id: string;
@@ -24,7 +26,7 @@ interface Movimiento {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -65,11 +67,17 @@ export class DashboardComponent implements OnInit {
     return this.movimientos.filter(m => m.tipo === 'compra').reduce((s, m) => s + m.monto, 0);
   }
 
+  lotesCompraStats: ReturnType<LotesCompraService['getStats']> | null = null;
+
   ngOnInit(): void {
     this.user = this.auth.getUser();
+    this.lotesCompraStats = this.lotesCompraService.getStats();
   }
 
-  constructor(private auth: AuthService) {}
+  constructor(
+    private auth: AuthService,
+    private lotesCompraService: LotesCompraService
+  ) {}
 
   setSection(s: string): void { this.activeSection = s; }
 

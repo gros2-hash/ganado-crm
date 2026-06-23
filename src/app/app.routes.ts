@@ -16,5 +16,13 @@ export const routes: Routes = [
         (m) => m.DashboardComponent
       ),
   },
+  {
+    path: 'lotes-compra',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes-compra/lotes-compra.component').then(
+        (m) => m.LotesCompraComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
