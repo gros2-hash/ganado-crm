@@ -24,5 +24,13 @@ export const routes: Routes = [
         (m) => m.LotesCompraComponent
       ),
   },
+  {
+    path: 'productores',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/productores/productores.component').then(
+        (m) => m.ProductoresComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
