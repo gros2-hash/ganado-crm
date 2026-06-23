@@ -24,6 +24,10 @@
         <span class="nav-icon">💰</span>
         <span class="nav-label" *ngIf="sidebarOpen">Ventas</span>
       </button>
+      <a class="nav-item" routerLink="/lotes-venta">
+        <span class="nav-icon">📤</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -90,6 +94,14 @@
             <span class="kpi-sub">{{ lotes.filter(l => l.estado === 'en_proceso').length }} en proceso</span>
           </div>
         </div>
+        <a class="kpi-card amber kpi-link" routerLink="/lotes-venta" *ngIf="ventasStats">
+          <div class="kpi-icon">📤</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Lotes de Venta CRM</span>
+            <span class="kpi-value">{{ ventasStats.total }}</span>
+            <span class="kpi-sub">{{ ventasStats.disponible }} disponibles · margen ${{ ventasStats.margenTotal | number }}</span>
+          </div>
+        </a>
       </div>
 
       <div class="recent-section">
