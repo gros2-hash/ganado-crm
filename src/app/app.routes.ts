@@ -17,6 +17,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'lotes-compra',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes-compra/lotes-compra.component').then(
+        (m) => m.LotesCompraComponent
+      ),
+  },
+  {
     path: 'productores',
     canActivate: [authGuard],
     loadComponent: () =>

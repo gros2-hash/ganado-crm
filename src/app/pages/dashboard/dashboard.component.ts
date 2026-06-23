@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, User } from '../../auth/auth.service';
+import { LotesCompraService } from '../../services/lotes-compra.service';
 import { ProductoresService } from '../../services/productores.service';
 
 interface Lote {
@@ -25,6 +26,7 @@ export class DashboardComponent implements OnInit {
   activeSection = 'resumen';
   sidebarOpen = true;
   currentDate = new Date();
+  lotesCompraStats: ReturnType<LotesCompraService['getStats']> | null = null;
   productoresStats: ReturnType<ProductoresService['getStats']> | null = null;
 
   lotes: Lote[] = [
@@ -42,15 +44,16 @@ export class DashboardComponent implements OnInit {
     { tipo: 'venta',  lote: 'L-002', monto: 78200,  fecha: '2024-11-08', contraparte: 'Exp. Montevideo' },
   ];
 
-  get totalCabezas(): number    { return this.lotes.filter(l => l.estado !== 'vendido').reduce((s, l) => s + l.cabezas, 0); }
-  get lotesDisponibles(): number { return this.lotes.filter(l => l.estado === 'disponible').length; }
-  get facturacionMes(): number   { return this.movimientos.filter(m => m.tipo === 'venta').reduce((s, m) => s + m.monto, 0); }
-  get comprasMes(): number       { return this.movimientos.filter(m => m.tipo === 'compra').reduce((s, m) => s + m.monto, 0); }
+  get totalCabezas(): number     { return this.lotes.filter(l => l.estado !== 'vendido').reduce((s, l) => s + l.cabezas, 0); }
+  get lotesDisponibles(): number  { return this.lotes.filter(l => l.estado === 'disponible').length; }
+  get facturacionMes(): number    { return this.movimientos.filter(m => m.tipo === 'venta').reduce((s, m) => s + m.monto, 0); }
+  get comprasMes(): number        { return this.movimientos.filter(m => m.tipo === 'compra').reduce((s, m) => s + m.monto, 0); }
 
-  constructor(private auth: AuthService, private productoresSvc: ProductoresService) {}
+  constructor(private auth: AuthService, private lotesCompraSvc: LotesCompraService, private productoresSvc: ProductoresService) {}
 
   ngOnInit(): void {
     this.user = this.auth.getUser();
+    this.lotesCompraStats = this.lotesCompraSvc.getStats();
     this.productoresStats = this.productoresSvc.getStats();
   }
 
