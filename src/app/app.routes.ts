@@ -16,5 +16,13 @@ export const routes: Routes = [
         (m) => m.DashboardComponent
       ),
   },
+  {
+    path: 'estadisticas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/estadisticas/estadisticas.component').then(
+        (m) => m.EstadisticasComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
