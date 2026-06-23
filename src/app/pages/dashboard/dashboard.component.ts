@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService, User } from '../../auth/auth.service';
+import { LotesCompraService } from '../../services/lotes-compra.service';
 import { LotesVentaService } from '../../services/lotes-venta.service';
 import { ProductoresService } from '../../services/productores.service';
 
@@ -26,6 +27,7 @@ export class DashboardComponent implements OnInit {
   activeSection = 'resumen';
   sidebarOpen = true;
   currentDate = new Date();
+  lotesCompraStats: ReturnType<LotesCompraService['getStats']> | null = null;
   ventasStats: ReturnType<LotesVentaService['getStats']> | null = null;
   productoresStats: ReturnType<ProductoresService['getStats']> | null = null;
 
@@ -49,10 +51,16 @@ export class DashboardComponent implements OnInit {
   get facturacionMes(): number    { return this.movimientos.filter(m => m.tipo === 'venta').reduce((s, m) => s + m.monto, 0); }
   get comprasMes(): number        { return this.movimientos.filter(m => m.tipo === 'compra').reduce((s, m) => s + m.monto, 0); }
 
-  constructor(private auth: AuthService, private ventaService: LotesVentaService, private productoresSvc: ProductoresService) {}
+  constructor(
+    private auth: AuthService,
+    private lotesCompraSvc: LotesCompraService,
+    private ventaService: LotesVentaService,
+    private productoresSvc: ProductoresService
+  ) {}
 
   ngOnInit(): void {
     this.user = this.auth.getUser();
+    this.lotesCompraStats = this.lotesCompraSvc.getStats();
     this.ventasStats = this.ventaService.getStats();
     this.productoresStats = this.productoresSvc.getStats();
   }

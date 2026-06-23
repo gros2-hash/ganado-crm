@@ -24,6 +24,10 @@
         <span class="nav-icon">💰</span>
         <span class="nav-label" *ngIf="sidebarOpen">Ventas</span>
       </button>
+      <a class="nav-item" routerLink="/lotes-compra">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Lotes de Compra</span>
+      </a>
       <a class="nav-item" routerLink="/lotes-venta">
         <span class="nav-icon">📤</span>
         <span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span>
@@ -98,6 +102,14 @@
             <span class="kpi-sub">{{ lotes.filter(l => l.estado === 'en_proceso').length }} en proceso</span>
           </div>
         </div>
+        <a class="kpi-card teal kpi-link" routerLink="/lotes-compra" *ngIf="lotesCompraStats">
+          <div class="kpi-icon">🤖</div>
+          <div class="kpi-body">
+            <span class="kpi-label">Lotes de Compra CRM</span>
+            <span class="kpi-value">{{ lotesCompraStats.total }}</span>
+            <span class="kpi-sub">{{ lotesCompraStats.deChatbot }} vía chatbot · {{ lotesCompraStats.negociacion }} en negociación</span>
+          </div>
+        </a>
         <a class="kpi-card amber kpi-link" routerLink="/lotes-venta" *ngIf="ventasStats">
           <div class="kpi-icon">📤</div>
           <div class="kpi-body">
