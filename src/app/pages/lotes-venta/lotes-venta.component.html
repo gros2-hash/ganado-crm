@@ -1,0 +1,410 @@
+<div class="crm-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+    <div class="sidebar-header">
+      <span class="logo-icon">🐄</span>
+      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard"><span class="nav-icon">📊</span><span class="nav-label" *ngIf="sidebarOpen">Resumen</span></a>
+      <a class="nav-item" routerLink="/lotes-compra"><span class="nav-icon">🛒</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Compra</span></a>
+      <a class="nav-item active" routerLink="/lotes-venta"><span class="nav-icon">💰</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span></a>
+      <div class="nav-sep" *ngIf="sidebarOpen">Análisis</div>
+      <a class="nav-item" routerLink="/estadisticas"><span class="nav-icon">📈</span><span class="nav-label" *ngIf="sidebarOpen">Estadísticas</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="sidebarOpen">
+        <div class="avatar">{{ auth.getUser()?.avatar }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ auth.getUser()?.name }}</span>
+          <span class="user-role">{{ auth.getUser()?.role }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()">⏻</button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="breadcrumb">
+        <span class="bc-link" (click)="modoVista = 'lista'; loteSeleccionado = null">Lotes de Venta</span>
+        <span *ngIf="modoVista === 'ficha'"> › <strong>{{ loteSeleccionado?.id }}</strong></span>
+        <span *ngIf="modoVista === 'nuevo'"> › <strong>Nuevo lote</strong></span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-nuevo" (click)="abrirNuevo()">+ Nuevo lote</button>
+      </div>
+    </header>
+
+    <!-- ─── LISTA ─── -->
+    <div class="content" *ngIf="modoVista === 'lista'">
+
+      <!-- KPIs -->
+      <div class="kpi-row" *ngIf="stats">
+        <div class="mini-kpi"><span class="mk-val">{{ stats.total }}</span><span class="mk-lbl">Total lotes</span></div>
+        <div class="mini-kpi disponible"><span class="mk-val">{{ stats.disponible }}</span><span class="mk-lbl">Disponibles</span></div>
+        <div class="mini-kpi reservado"><span class="mk-val">{{ stats.reservado }}</span><span class="mk-lbl">Reservados</span></div>
+        <div class="mini-kpi negociacion"><span class="mk-val">{{ stats.negociacion }}</span><span class="mk-lbl">Negociación</span></div>
+        <div class="mini-kpi cerrado"><span class="mk-val">{{ stats.cerrado }}</span><span class="mk-lbl">Cerrados</span></div>
+        <div class="mini-kpi facturado"><span class="mk-val">${{ stats.facturadoCerrado | number }}</span><span class="mk-lbl">Facturado</span></div>
+        <div class="mini-kpi margen"><span class="mk-val">${{ stats.margenTotal | number }}</span><span class="mk-lbl">Margen bruto</span></div>
+        <div class="mini-kpi chatbot"><span class="mk-val">{{ stats.deChatbot }}</span><span class="mk-lbl">Vía chatbot</span></div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filtros-bar">
+        <input class="search-input" [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()" placeholder="🔍 Buscar por ID, comprador, empresa, descripción...">
+        <select class="select-filtro" [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Todos los estados</option>
+          <option *ngFor="let e of estados" [value]="e.valor">{{ e.label }}</option>
+        </select>
+        <select class="select-filtro" [(ngModel)]="filtroDestino" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Todos los destinos</option>
+          <option *ngFor="let d of destinos" [value]="d.valor">{{ d.label }}</option>
+        </select>
+        <span class="result-count">{{ lotesFiltrados.length }} resultado{{ lotesFiltrados.length !== 1 ? 's' : '' }}</span>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Comprador</th>
+              <th>Descripción</th>
+              <th>Hacienda</th>
+              <th>Cabezas</th>
+              <th>Precio/cab.</th>
+              <th>Margen/cab.</th>
+              <th>Valor total</th>
+              <th>Destino</th>
+              <th>Forma de pago</th>
+              <th>Agente</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of lotesFiltrados" (click)="seleccionarLote(l)" class="clickable">
+              <td><strong class="id-badge">{{ l.id }}</strong></td>
+              <td>
+                <div class="td-comprador">
+                  <span class="comp-nombre">{{ l.comprador.nombre }}</span>
+                  <span class="comp-empresa" *ngIf="l.comprador.empresa">{{ l.comprador.empresa }}</span>
+                  <span class="comp-tipo">{{ compradorLabel(l.comprador.tipo) }}</span>
+                </div>
+              </td>
+              <td class="td-desc">{{ l.descripcion }}</td>
+              <td>{{ l.tipoGanado }} · {{ l.raza }}</td>
+              <td>{{ l.cantidadCabezas }}</td>
+              <td>${{ l.precioUnitario | number }}</td>
+              <td>
+                <span class="margen-chip" *ngIf="margenUnitario(l) as m" [class.positivo]="m > 0">
+                  +${{ m | number }}
+                  <em *ngIf="margenPct(l) as pct">({{ pct }}%)</em>
+                </span>
+                <span class="margen-chip nd" *ngIf="margenUnitario(l) === null">—</span>
+              </td>
+              <td><strong>${{ valorVenta(l) | number }}</strong></td>
+              <td><span class="destino-badge {{ l.destino }}">{{ destinoLabel(l.destino) }}</span></td>
+              <td><span class="pago-badge">{{ pagoLabel(l.formaPago) }}</span></td>
+              <td>
+                <div class="td-agente">
+                  <div class="sm-avatar">{{ l.agenteAvatar }}</div>
+                  <span>{{ l.agente }}</span>
+                </div>
+              </td>
+              <td><span class="estado-badge {{ l.estado }}">{{ estadoLabel(l.estado) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="lotesFiltrados.length === 0">
+          <span>🔍</span><p>No se encontraron lotes con ese criterio</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── FICHA ─── -->
+    <div class="content ficha-layout" *ngIf="modoVista === 'ficha' && loteSeleccionado">
+
+      <!-- Panel izquierdo -->
+      <div class="ficha-panel">
+
+        <div class="ficha-header">
+          <div class="ficha-id">
+            <span class="id-big">{{ loteSeleccionado.id }}</span>
+            <span class="lc-ref" *ngIf="loteSeleccionado.loteCompraId">
+              📎 Origen: {{ loteSeleccionado.loteCompraId }}
+            </span>
+            <span class="origen-badge" [class.chatbot]="loteSeleccionado.origen === 'chatbot'" [class.manual]="loteSeleccionado.origen === 'manual'">
+              {{ loteSeleccionado.origen === 'chatbot' ? '🤖 Chatbot' : '✏️ Manual' }}
+            </span>
+          </div>
+          <select class="estado-select {{ loteSeleccionado.estado }}"
+                  [ngModel]="loteSeleccionado.estado"
+                  (ngModelChange)="cambiarEstado(loteSeleccionado!.id, $event)">
+            <option *ngFor="let e of estados" [value]="e.valor">{{ e.label }}</option>
+          </select>
+        </div>
+
+        <!-- Descripción -->
+        <div class="ficha-section">
+          <h3>📋 Descripción</h3>
+          <p class="desc-text">{{ loteSeleccionado.descripcion }}</p>
+          <p class="obs-text" *ngIf="loteSeleccionado.observaciones"><strong>Obs:</strong> {{ loteSeleccionado.observaciones }}</p>
+        </div>
+
+        <!-- Comprador -->
+        <div class="ficha-section">
+          <h3>🏢 Comprador</h3>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-lbl">Nombre</span><span class="info-val">{{ loteSeleccionado.comprador.nombre }}</span></div>
+            <div class="info-item"><span class="info-lbl">Celular</span>
+              <a [href]="'tel:' + loteSeleccionado.comprador.celular" class="info-val link-tel">📱 {{ loteSeleccionado.comprador.celular }}</a>
+            </div>
+            <div class="info-item" *ngIf="loteSeleccionado.comprador.empresa"><span class="info-lbl">Empresa</span><span class="info-val font-bold">{{ loteSeleccionado.comprador.empresa }}</span></div>
+            <div class="info-item"><span class="info-lbl">Tipo</span><span class="info-val"><span class="tipo-comp-badge">{{ compradorLabel(loteSeleccionado.comprador.tipo) }}</span></span></div>
+            <div class="info-item" *ngIf="loteSeleccionado.comprador.email"><span class="info-lbl">Email</span><span class="info-val">{{ loteSeleccionado.comprador.email }}</span></div>
+            <div class="info-item" *ngIf="loteSeleccionado.comprador.localidad"><span class="info-lbl">Localidad</span><span class="info-val">{{ loteSeleccionado.comprador.localidad }}</span></div>
+          </div>
+        </div>
+
+        <!-- Video -->
+        <div class="ficha-section">
+          <h3>🎥 Video del lote</h3>
+          <div class="video-wrap" *ngIf="isYoutube(loteSeleccionado.videoLink)">
+            <iframe [src]="'https://www.youtube.com/embed/' + videoId(loteSeleccionado.videoLink) | safeUrl"
+                    frameborder="0" allowfullscreen class="video-embed"></iframe>
+          </div>
+          <a [href]="loteSeleccionado.videoLink" target="_blank" class="video-link-btn" *ngIf="!isYoutube(loteSeleccionado.videoLink)">🎬 Ver video</a>
+          <div class="video-url">
+            <span class="info-lbl">Link:</span>
+            <a [href]="loteSeleccionado.videoLink" target="_blank" class="url-text">{{ loteSeleccionado.videoLink }}</a>
+          </div>
+        </div>
+
+        <!-- Hacienda -->
+        <div class="ficha-section">
+          <h3>🐄 Hacienda</h3>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-lbl">Tipo</span><span class="info-val">{{ loteSeleccionado.tipoGanado }}</span></div>
+            <div class="info-item"><span class="info-lbl">Raza</span><span class="info-val">{{ loteSeleccionado.raza }}</span></div>
+            <div class="info-item"><span class="info-lbl">Cabezas</span><span class="info-val font-big">{{ loteSeleccionado.cantidadCabezas }}</span></div>
+            <div class="info-item" *ngIf="loteSeleccionado.pesoPromedio"><span class="info-lbl">Peso prom.</span><span class="info-val">{{ loteSeleccionado.pesoPromedio }} kg</span></div>
+            <div class="info-item"><span class="info-lbl">Campo origen</span><span class="info-val">{{ loteSeleccionado.campo }}</span></div>
+            <div class="info-item"><span class="info-lbl">Departamento</span><span class="info-val">{{ loteSeleccionado.departamento }}</span></div>
+          </div>
+        </div>
+
+        <!-- Precios y margen -->
+        <div class="ficha-section">
+          <h3>💵 Precios y margen</h3>
+          <div class="margen-grid">
+            <div class="precio-card venta">
+              <span class="pc-lbl">Precio de venta</span>
+              <span class="pc-val">${{ loteSeleccionado.precioUnitario | number }}<em>/cab</em></span>
+              <span class="pc-total">${{ valorVenta(loteSeleccionado) | number }} total</span>
+            </div>
+            <div class="precio-card costo" *ngIf="loteSeleccionado.costoUnitario">
+              <span class="pc-lbl">Costo de compra</span>
+              <span class="pc-val">${{ loteSeleccionado.costoUnitario | number }}<em>/cab</em></span>
+              <span class="pc-total">${{ loteSeleccionado.cantidadCabezas * loteSeleccionado.costoUnitario! | number }} total</span>
+            </div>
+            <div class="precio-card margen" *ngIf="margenUnitario(loteSeleccionado) as mg">
+              <span class="pc-lbl">Margen bruto</span>
+              <span class="pc-val green">+${{ mg | number }}<em>/cab</em></span>
+              <span class="pc-total green">${{ margenTotal(loteSeleccionado) | number }} · {{ margenPct(loteSeleccionado) }}%</span>
+            </div>
+            <div class="precio-card comision" *ngIf="comisionTotal(loteSeleccionado) as com">
+              <span class="pc-lbl">Comisión agente ({{ loteSeleccionado.comisionPct }}%)</span>
+              <span class="pc-val amber">${{ com | number }}</span>
+              <span class="pc-total">{{ loteSeleccionado.agente }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logística de venta -->
+        <div class="ficha-section">
+          <h3>🚚 Logística de venta</h3>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-lbl">Destino</span><span class="info-val"><span class="destino-badge {{ loteSeleccionado.destino }}">{{ destinoLabel(loteSeleccionado.destino) }}</span></span></div>
+            <div class="info-item"><span class="info-lbl">Forma de pago</span><span class="info-val">{{ pagoLabel(loteSeleccionado.formaPago) }}</span></div>
+            <div class="info-item" *ngIf="loteSeleccionado.condicionEntrega"><span class="info-lbl">Condición entrega</span><span class="info-val">{{ entregaLabel(loteSeleccionado.condicionEntrega) }}</span></div>
+            <div class="info-item" *ngIf="loteSeleccionado.fechaEntrega"><span class="info-lbl">Fecha entrega</span><span class="info-val font-bold">{{ loteSeleccionado.fechaEntrega }}</span></div>
+            <div class="info-item" *ngIf="loteSeleccionado.lugarEntrega"><span class="info-lbl">Lugar entrega</span><span class="info-val">{{ loteSeleccionado.lugarEntrega }}</span></div>
+            <div class="info-item" *ngIf="loteSeleccionado.departamentoEntrega"><span class="info-lbl">Depto. entrega</span><span class="info-val">{{ loteSeleccionado.departamentoEntrega }}</span></div>
+          </div>
+        </div>
+
+        <!-- Agente -->
+        <div class="ficha-section">
+          <h3>🧑‍💼 Agente comercial</h3>
+          <div class="agente-row">
+            <div class="agente-avatar">{{ loteSeleccionado.agenteAvatar }}</div>
+            <div>
+              <div class="agente-nombre">{{ loteSeleccionado.agente }}</div>
+              <div class="agente-dates">Creado: {{ loteSeleccionado.fechaCreacion }} · Actualizado: {{ loteSeleccionado.fechaActualizacion }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel derecho: chatbot -->
+      <div class="chatbot-panel">
+        <div class="chat-panel-header">
+          <h3>🤖 Flujo del Chatbot</h3>
+          <span class="chat-count">{{ loteSeleccionado.flujosChatbot.length }} sesión{{ loteSeleccionado.flujosChatbot.length !== 1 ? 'es' : '' }}</span>
+        </div>
+
+        <div class="empty-chat" *ngIf="loteSeleccionado.flujosChatbot.length === 0">
+          <span>✏️</span><p>Lote creado manualmente, sin flujo de chatbot</p>
+        </div>
+
+        <div *ngIf="loteSeleccionado.flujosChatbot.length > 0">
+          <div class="sesion-tabs" *ngIf="loteSeleccionado.flujosChatbot.length > 1">
+            <button class="sesion-tab" *ngFor="let f of loteSeleccionado.flujosChatbot; let i = index"
+                    [class.active]="flujoActivo?.sesionId === f.sesionId" (click)="setFlujoActivo(f)">
+              Sesión {{ i + 1 }}
+              <span class="tab-badge {{ f.resultado }}">{{ f.resultado === 'lote_generado' ? '✅' : f.resultado === 'seguimiento' ? '🔄' : '—' }}</span>
+            </button>
+          </div>
+
+          <div class="sesion-info" *ngIf="flujoActivo">
+            <div class="si-item"><span class="si-lbl">Inicio</span><span class="si-val">{{ flujoActivo.fechaInicio }}</span></div>
+            <div class="si-item"><span class="si-lbl">Fin</span><span class="si-val">{{ flujoActivo.fechaFin }}</span></div>
+            <div class="si-item"><span class="si-lbl">Mensajes</span><span class="si-val">{{ flujoActivo.totalMensajes }}</span></div>
+            <div class="si-item">
+              <span class="si-lbl">Resultado</span>
+              <span class="resultado-badge {{ flujoActivo.resultado }}">
+                {{ flujoActivo.resultado === 'lote_generado' ? '✅ Lote generado' : flujoActivo.resultado === 'seguimiento' ? '🔄 Seguimiento' : '— Sin resultado' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="mensajes-list" *ngIf="flujoActivo">
+            <div class="mensaje" *ngFor="let m of flujoActivo.mensajes" [class]="tipoMensajeClass(m.tipo)">
+              <div class="msg-header">
+                <span class="msg-tipo">{{ m.tipo === 'bot' ? '🤖 Bot' : m.tipo === 'cliente' ? '🏢 Comprador' : m.tipo === 'agente' ? '🧑‍💼 ' + flujoActivo.agente : '⚙️ Sistema' }}</span>
+                <span class="msg-time">{{ m.timestamp }}</span>
+              </div>
+              <div class="msg-body">{{ m.contenido }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── NUEVO LOTE ─── -->
+    <div class="content" *ngIf="modoVista === 'nuevo'">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Nuevo Lote de Venta</h2>
+          <p>Registrá la hacienda disponible para venta. El ID se asignará automáticamente.</p>
+        </div>
+
+        <div class="success-msg" *ngIf="formGuardado">✅ Lote guardado. Redirigiendo a la ficha...</div>
+
+        <div class="form-grid" *ngIf="!formGuardado">
+
+          <div class="form-section">
+            <h3>📋 Descripción del lote</h3>
+            <div class="field">
+              <label>Descripción *</label>
+              <textarea [(ngModel)]="nuevoLote.descripcion" placeholder="Tipo, condición corporal, aptitud, campo de origen..."></textarea>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Tipo de ganado *</label>
+                <select [(ngModel)]="nuevoLote.tipoGanado"><option value="">Seleccioná...</option><option *ngFor="let t of tiposGanado" [value]="t">{{ t }}</option></select>
+              </div>
+              <div class="field"><label>Raza *</label>
+                <select [(ngModel)]="nuevoLote.raza"><option value="">Seleccioná...</option><option *ngFor="let r of razas" [value]="r">{{ r }}</option></select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Cabezas *</label><input type="number" [(ngModel)]="nuevoLote.cantidadCabezas" placeholder="120"></div>
+              <div class="field"><label>Precio de venta/cab. ($) *</label><input type="number" [(ngModel)]="nuevoLote.precioUnitario" placeholder="2100"></div>
+              <div class="field"><label>Costo de compra/cab. ($)</label><input type="number" [(ngModel)]="nuevoLote.costoUnitario" placeholder="1850"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Peso promedio (kg)</label><input type="number" [(ngModel)]="nuevoLote.pesoPromedio" placeholder="480"></div>
+              <div class="field"><label>Campo de origen</label><input type="text" [(ngModel)]="nuevoLote.campo" placeholder="Est. La Querencia"></div>
+              <div class="field"><label>Departamento origen *</label>
+                <select [(ngModel)]="nuevoLote.departamento"><option value="">Seleccioná...</option><option *ngFor="let d of departamentos" [value]="d">{{ d }}</option></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>🏢 Datos del comprador</h3>
+            <div class="field-row">
+              <div class="field"><label>Nombre *</label><input type="text" [(ngModel)]="nuevoLote.comprador!.nombre" placeholder="Ricardo Noel"></div>
+              <div class="field"><label>Celular *</label><input type="tel" [(ngModel)]="nuevoLote.comprador!.celular" placeholder="+598 99 321 654"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Empresa</label><input type="text" [(ngModel)]="nuevoLote.comprador!.empresa" placeholder="Frigorífico Canelones"></div>
+              <div class="field"><label>Tipo comprador *</label>
+                <select [(ngModel)]="nuevoLote.comprador!.tipo">
+                  <option *ngFor="let t of tiposComprador" [value]="t.valor">{{ t.label }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Email</label><input type="email" [(ngModel)]="nuevoLote.comprador!.email" placeholder="comprador@empresa.com"></div>
+              <div class="field"><label>Localidad</label><input type="text" [(ngModel)]="nuevoLote.comprador!.localidad" placeholder="Canelones"></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>🚚 Logística de venta</h3>
+            <div class="field-row">
+              <div class="field"><label>Destino *</label>
+                <select [(ngModel)]="nuevoLote.destino"><option value="">Seleccioná...</option><option *ngFor="let d of destinos" [value]="d.valor">{{ d.label }}</option></select>
+              </div>
+              <div class="field"><label>Forma de pago *</label>
+                <select [(ngModel)]="nuevoLote.formaPago"><option value="">Seleccioná...</option><option *ngFor="let p of formasPago" [value]="p.valor">{{ p.label }}</option></select>
+              </div>
+              <div class="field"><label>Condición de entrega</label>
+                <select [(ngModel)]="nuevoLote.condicionEntrega"><option value="">Seleccioná...</option><option *ngFor="let c of condicionesEntrega" [value]="c.valor">{{ c.label }}</option></select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Fecha de entrega</label><input type="date" [(ngModel)]="nuevoLote.fechaEntrega"></div>
+              <div class="field"><label>Lugar de entrega</label><input type="text" [(ngModel)]="nuevoLote.lugarEntrega" placeholder="Frigorífico Canelones"></div>
+              <div class="field"><label>Departamento entrega</label>
+                <select [(ngModel)]="nuevoLote.departamentoEntrega"><option value="">Seleccioná...</option><option *ngFor="let d of departamentos" [value]="d">{{ d }}</option></select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Comisión agente (%)</label><input type="number" [(ngModel)]="nuevoLote.comisionPct" placeholder="2" step="0.5"></div>
+              <div class="field"><label>Lote de compra de origen (ID)</label><input type="text" [(ngModel)]="nuevoLote.loteCompraId" placeholder="LC-0001"></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>🎥 Video del lote</h3>
+            <div class="field">
+              <label>Link del video *</label>
+              <input type="url" [(ngModel)]="nuevoLote.videoLink" placeholder="https://www.youtube.com/watch?v=...">
+              <span class="field-hint">Link del video compartido por el productor o tomado en campo</span>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>📝 Observaciones</h3>
+            <div class="field"><label>Notas internas</label><textarea [(ngModel)]="nuevoLote.observaciones" placeholder="Condiciones especiales, requisitos del comprador, etc."></textarea></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-cancel" (click)="modoVista = 'lista'">Cancelar</button>
+            <button class="btn-guardar" (click)="guardarNuevo()">💾 Guardar lote</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

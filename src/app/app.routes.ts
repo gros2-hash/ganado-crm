@@ -24,5 +24,37 @@ export const routes: Routes = [
         (m) => m.EstadisticasComponent
       ),
   },
+  {
+    path: 'lotes-compra',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes-compra/lotes-compra.component').then(
+        (m) => m.LotesCompraComponent
+      ),
+  },
+  {
+    path: 'lotes-venta',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes-venta/lotes-venta.component').then(
+        (m) => m.LotesVentaComponent
+      ),
+  },
+  {
+    path: 'productores',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/productores/productores.component').then(
+        (m) => m.ProductoresComponent
+      ),
+  },
+  {
+    path: 'visualizador',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/visualizador-lotes/visualizador-lotes.component').then(
+        (m) => m.VisualizadorLotesComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

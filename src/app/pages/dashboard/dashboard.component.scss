@@ -223,6 +223,9 @@ $sidebar-w: 240px;
   &.blue   { border-color: #2563eb; .kpi-icon { background: #eff6ff; } }
   &.amber  { border-color: #d97706; .kpi-icon { background: #fffbeb; } }
   &.purple { border-color: #7c3aed; .kpi-icon { background: #f5f3ff; } }
+  &.teal   { border-color: #0891b2; .kpi-icon { background: #ecfeff; } }
+  &.kpi-link { text-decoration: none; cursor: pointer; transition: transform .15s, box-shadow .15s;
+    &:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); } }
 
   .kpi-icon {
     width: 52px; height: 52px;
