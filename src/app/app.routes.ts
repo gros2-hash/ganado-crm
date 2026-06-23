@@ -40,5 +40,13 @@ export const routes: Routes = [
         (m) => m.ProductoresComponent
       ),
   },
+  {
+    path: 'visualizador',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/visualizador-lotes/visualizador-lotes.component').then(
+        (m) => m.VisualizadorLotesComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

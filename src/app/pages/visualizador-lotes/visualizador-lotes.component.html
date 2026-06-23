@@ -1,0 +1,386 @@
+<div class="viz-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+    <div class="sidebar-header">
+      <span class="logo-icon">🐄</span>
+      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Dashboard</span>
+      </a>
+      <a class="nav-item" routerLink="/lotes-compra">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Lotes Compra</span>
+      </a>
+      <a class="nav-item" routerLink="/lotes-venta">
+        <span class="nav-icon">📤</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Lotes Venta</span>
+      </a>
+      <a class="nav-item active" routerLink="/visualizador">
+        <span class="nav-icon">🎬</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Visualizador</span>
+      </a>
+      <a class="nav-item" routerLink="/productores">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label" *ngIf="sidebarOpen">Productores</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="sidebarOpen">
+        <div class="avatar">{{ auth.getUser()?.avatar }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ auth.getUser()?.name }}</span>
+          <span class="user-role">{{ auth.getUser()?.role }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="topbar-title">
+        <span class="title-icon">🎬</span>
+        <span *ngIf="modoVista === 'grid'">Visualizador de Lotes</span>
+        <ng-container *ngIf="modoVista === 'detalle' && loteActivo">
+          <button class="breadcrumb-btn" (click)="volverGrilla()">Visualizador</button>
+          <span class="bc-sep">/</span>
+          <span>{{ loteActivo.id }}</span>
+        </ng-container>
+      </div>
+      <div class="topbar-right">
+        <span class="result-badge" *ngIf="modoVista === 'grid'">
+          {{ lotesFiltrados.length }} de {{ todosLotes.length }} lotes
+        </span>
+        <ng-container *ngIf="modoVista === 'detalle'">
+          <span class="nav-counter">{{ indiceActivo + 1 }} / {{ lotesFiltrados.length }}</span>
+          <button class="nav-btn" (click)="irAnterior()" [disabled]="indiceActivo === 0" title="Anterior (←)">‹</button>
+          <button class="nav-btn" (click)="irSiguiente()" [disabled]="indiceActivo === lotesFiltrados.length - 1" title="Siguiente (→)">›</button>
+        </ng-container>
+      </div>
+    </header>
+
+    <!-- ═══════════════════ VISTA GRILLA ═══════════════════ -->
+    <section class="content" *ngIf="modoVista === 'grid'">
+
+      <!-- FILTROS -->
+      <div class="filtros-panel">
+        <div class="filtros-row">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" placeholder="Buscar por lote, ganado, campo, contacto..."
+              [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()">
+            <button class="clear-search" *ngIf="busqueda" (click)="busqueda=''; aplicarFiltros()">✕</button>
+          </div>
+
+          <!-- Tabs tipo -->
+          <div class="tipo-tabs">
+            <button class="tipo-tab" [class.active]="filtroTipo === 'todos'"
+              (click)="filtroTipo='todos'; aplicarFiltros()">
+              Todos <span class="tab-count">{{ todosLotes.length }}</span>
+            </button>
+            <button class="tipo-tab compra" [class.active]="filtroTipo === 'compra'"
+              (click)="filtroTipo='compra'; aplicarFiltros()">
+              🛒 Compra <span class="tab-count">{{ countTipo('compra') }}</span>
+            </button>
+            <button class="tipo-tab venta" [class.active]="filtroTipo === 'venta'"
+              (click)="filtroTipo='venta'; aplicarFiltros()">
+              📤 Venta <span class="tab-count">{{ countTipo('venta') }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="filtros-row filtros-row-2">
+          <select class="select-filtro" [(ngModel)]="filtroTipoGanado" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todos los ganados</option>
+            <option *ngFor="let t of tiposGanado" [value]="t">{{ t }}</option>
+          </select>
+          <select class="select-filtro" [(ngModel)]="filtroRaza" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todas las razas</option>
+            <option *ngFor="let r of razas" [value]="r">{{ r }}</option>
+          </select>
+          <select class="select-filtro" [(ngModel)]="filtroDpto" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todos los departamentos</option>
+            <option *ngFor="let d of departamentos" [value]="d">{{ d }}</option>
+          </select>
+          <select class="select-filtro" [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todos los estados</option>
+            <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+          </select>
+          <button class="btn-reset" *ngIf="hayFiltrosActivos" (click)="resetFiltros()">✕ Limpiar</button>
+        </div>
+      </div>
+
+      <!-- GRILLA VIDEOS -->
+      <div class="video-grid" *ngIf="lotesFiltrados.length > 0">
+        <div class="video-card" *ngFor="let lote of lotesFiltrados; let i = index"
+          (click)="abrirDetalle(lote, i)" [class.compra]="lote.tipo === 'compra'" [class.venta]="lote.tipo === 'venta'">
+
+          <!-- THUMBNAIL -->
+          <div class="card-thumb">
+            <img [src]="lote.thumbnailUrl" [alt]="lote.descripcion"
+              (error)="thumbnailError($event)" loading="lazy">
+            <div class="thumb-overlay">
+              <div class="play-btn">▶</div>
+            </div>
+            <span class="tipo-badge" [class.compra]="lote.tipo === 'compra'" [class.venta]="lote.tipo === 'venta'">
+              {{ lote.tipo === 'compra' ? '🛒 Compra' : '📤 Venta' }}
+            </span>
+            <span class="origen-badge" *ngIf="lote.origen === 'chatbot'">🤖</span>
+          </div>
+
+          <!-- INFO MÍNIMA -->
+          <div class="card-info">
+            <div class="card-header-row">
+              <span class="card-id">{{ lote.id }}</span>
+              <span class="card-dpto">{{ lote.departamento }}</span>
+            </div>
+            <p class="card-desc">{{ lote.descripcion }}</p>
+            <div class="card-stats">
+              <span class="stat">🐄 {{ lote.cantidadCabezas }} cab.</span>
+              <span class="stat">{{ lote.tipoGanado }} · {{ lote.raza }}</span>
+            </div>
+            <div class="card-footer-row">
+              <span class="card-price">${{ lote.precioUnitario | number }}<small>/cab</small></span>
+              <span class="estado-pill" [ngClass]="estadoClass(lote.estado)">{{ lote.estado }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div class="empty-state" *ngIf="lotesFiltrados.length === 0">
+        <span>🎬</span>
+        <p>No hay lotes con video para estos filtros.</p>
+        <button class="btn-reset-lg" (click)="resetFiltros()">Ver todos los lotes</button>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════ VISTA DETALLE ═══════════════════ -->
+    <section class="detalle-view" *ngIf="modoVista === 'detalle' && loteActivo">
+
+      <!-- VIDEO PLAYER AREA -->
+      <div class="player-area">
+
+        <!-- Flecha anterior -->
+        <button class="arrow-nav arrow-prev"
+          [class.hidden]="indiceActivo === 0"
+          (click)="irAnterior()" title="Lote anterior (←)">
+          <span>‹</span>
+          <small *ngIf="indiceActivo > 0">{{ lotesFiltrados[indiceActivo - 1].id }}</small>
+        </button>
+
+        <!-- Video / Thumbnail -->
+        <div class="player-box">
+          <!-- IFRAME cuando está reproduciendo -->
+          <iframe *ngIf="videoActivo && loteActivo.embedUrl"
+            [src]="loteActivo.embedUrl | safeUrl"
+            frameborder="0" allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+          </iframe>
+
+          <!-- THUMBNAIL + play cuando no está reproduciendo -->
+          <div class="player-thumb" *ngIf="!videoActivo" (click)="reproducir()">
+            <img [src]="loteActivo.thumbnailUrl" [alt]="loteActivo.descripcion"
+              (error)="thumbnailError($event)">
+            <div class="big-play-btn">
+              <div class="play-circle">▶</div>
+              <span>Reproducir video</span>
+            </div>
+          </div>
+
+          <!-- Sin video -->
+          <div class="no-video-msg" *ngIf="!loteActivo.videoId && !videoActivo">
+            <span>📷</span>
+            <p>Este lote no tiene video registrado.</p>
+          </div>
+        </div>
+
+        <!-- Flecha siguiente -->
+        <button class="arrow-nav arrow-next"
+          [class.hidden]="indiceActivo === lotesFiltrados.length - 1"
+          (click)="irSiguiente()" title="Lote siguiente (→)">
+          <span>›</span>
+          <small *ngIf="indiceActivo < lotesFiltrados.length - 1">{{ lotesFiltrados[indiceActivo + 1].id }}</small>
+        </button>
+
+      </div>
+
+      <!-- MINIATURAS NAVEGACIÓN -->
+      <div class="thumb-strip" *ngIf="lotesFiltrados.length > 1">
+        <div class="thumb-item"
+          *ngFor="let l of lotesFiltrados; let i = index"
+          [class.active]="i === indiceActivo"
+          (click)="abrirDetalle(l, i)">
+          <img [src]="l.thumbnailUrl" [alt]="l.id" (error)="thumbnailError($event)">
+          <span class="thumb-id">{{ l.id }}</span>
+        </div>
+      </div>
+
+      <!-- INFO COMPLETA -->
+      <div class="detalle-info">
+
+        <!-- Cabecera -->
+        <div class="detalle-header">
+          <div class="dh-left">
+            <div class="dh-id-row">
+              <span class="dh-id">{{ loteActivo.id }}</span>
+              <span class="dh-tipo-badge" [class.compra]="loteActivo.tipo === 'compra'" [class.venta]="loteActivo.tipo === 'venta'">
+                {{ loteActivo.tipo === 'compra' ? '🛒 Lote de Compra' : '📤 Lote de Venta' }}
+              </span>
+              <span class="dh-estado">{{ loteActivo.estado }}</span>
+              <span class="dh-origen">{{ origenIcon(loteActivo.origen) }} {{ loteActivo.origen }}</span>
+            </div>
+            <h2 class="dh-desc">{{ loteActivo.descripcion }}</h2>
+          </div>
+          <div class="dh-right">
+            <div class="dh-precio">
+              <span class="precio-val">${{ loteActivo.precioUnitario | number }}</span>
+              <span class="precio-lbl">por cabeza</span>
+            </div>
+            <div class="dh-total">
+              <span class="total-val">${{ valorTotal(loteActivo) | number }}</span>
+              <span class="total-lbl">valor total</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cards de info -->
+        <div class="info-cards">
+
+          <!-- Hacienda -->
+          <div class="info-card">
+            <h3 class="ic-title">🐄 Hacienda</h3>
+            <div class="ic-grid">
+              <div class="ic-item">
+                <span class="ic-lbl">Tipo</span>
+                <span class="ic-val">{{ loteActivo.tipoGanado }}</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Raza</span>
+                <span class="ic-val">{{ loteActivo.raza }}</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Cabezas</span>
+                <span class="ic-val font-big">{{ loteActivo.cantidadCabezas }}</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Precio/cab</span>
+                <span class="ic-val font-big green">${{ loteActivo.precioUnitario | number }}</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Campo</span>
+                <span class="ic-val">{{ loteActivo.campo }}</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Departamento</span>
+                <span class="ic-val">{{ loteActivo.departamento }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contacto -->
+          <div class="info-card">
+            <h3 class="ic-title">👤 {{ loteActivo.tipo === 'compra' ? 'Cliente' : 'Comprador' }}</h3>
+            <div class="ic-grid">
+              <div class="ic-item full">
+                <span class="ic-lbl">Nombre</span>
+                <span class="ic-val font-bold">{{ loteActivo.contactoNombre }}</span>
+              </div>
+              <div class="ic-item" *ngIf="loteActivo.contactoEmpresa">
+                <span class="ic-lbl">Empresa</span>
+                <span class="ic-val">{{ loteActivo.contactoEmpresa }}</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Celular</span>
+                <a [href]="'tel:' + loteActivo.contactoCelular" class="ic-val link">
+                  {{ loteActivo.contactoCelular }}
+                </a>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">WhatsApp</span>
+                <a [href]="'https://wa.me/598' + loteActivo.contactoCelular.replace(/\D/g,'')" target="_blank" class="ic-val link wa">
+                  Abrir chat
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gestión -->
+          <div class="info-card">
+            <h3 class="ic-title">⚙️ Gestión</h3>
+            <div class="ic-grid">
+              <div class="ic-item">
+                <span class="ic-lbl">Agente</span>
+                <div class="ic-agente">
+                  <span class="ag-avatar">{{ loteActivo.agenteAvatar }}</span>
+                  <span class="ic-val">{{ loteActivo.agente }}</span>
+                </div>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Origen</span>
+                <span class="ic-val">{{ origenIcon(loteActivo.origen) }} {{ loteActivo.origen }}</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Flujos chatbot</span>
+                <span class="ic-val">{{ loteActivo.totalFlujos }} sesiones</span>
+              </div>
+              <div class="ic-item">
+                <span class="ic-lbl">Fecha</span>
+                <span class="ic-val">{{ loteActivo.fechaCreacion }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Venta extras -->
+          <div class="info-card" *ngIf="loteActivo.tipo === 'venta'">
+            <h3 class="ic-title">📤 Condiciones de Venta</h3>
+            <div class="ic-grid">
+              <div class="ic-item" *ngIf="loteActivo.destino">
+                <span class="ic-lbl">Destino</span>
+                <span class="ic-val">{{ loteActivo.destino }}</span>
+              </div>
+              <div class="ic-item" *ngIf="loteActivo.formaPago">
+                <span class="ic-lbl">Forma de pago</span>
+                <span class="ic-val">{{ loteActivo.formaPago }}</span>
+              </div>
+              <div class="ic-item" *ngIf="loteActivo.loteCompraId">
+                <span class="ic-lbl">Lote de compra</span>
+                <span class="ic-val monospace">{{ loteActivo.loteCompraId }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Observaciones -->
+          <div class="info-card full-width" *ngIf="loteActivo.observaciones">
+            <h3 class="ic-title">📝 Observaciones</h3>
+            <p class="obs-text">{{ loteActivo.observaciones }}</p>
+          </div>
+
+        </div>
+
+        <!-- Botones navegación abajo -->
+        <div class="detalle-nav-btns">
+          <button class="dnav-btn prev" (click)="irAnterior()" [disabled]="indiceActivo === 0">
+            ← {{ indiceActivo > 0 ? lotesFiltrados[indiceActivo - 1].id : 'Anterior' }}
+          </button>
+          <button class="dnav-btn volver" (click)="volverGrilla()">↑ Volver a la grilla</button>
+          <button class="dnav-btn next" (click)="irSiguiente()" [disabled]="indiceActivo === lotesFiltrados.length - 1">
+            {{ indiceActivo < lotesFiltrados.length - 1 ? lotesFiltrados[indiceActivo + 1].id : 'Siguiente' }} →
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+</div>
