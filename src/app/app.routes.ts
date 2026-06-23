@@ -17,6 +17,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'estadisticas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/estadisticas/estadisticas.component').then(
+        (m) => m.EstadisticasComponent
+      ),
+  },
+  {
     path: 'lotes-compra',
     canActivate: [authGuard],
     loadComponent: () =>
