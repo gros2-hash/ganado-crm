@@ -56,5 +56,13 @@ export const routes: Routes = [
         (m) => m.VisualizadorLotesComponent
       ),
   },
+  {
+    path: 'auditoria',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/auditoria/auditoria.component').then(
+        (m) => m.AuditoriaComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
