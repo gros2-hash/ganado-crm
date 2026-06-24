@@ -1,0 +1,125 @@
+<div class="crm-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+    <div class="sidebar-header">
+      <span class="logo-icon">🐄</span>
+      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard">          <span class="nav-icon">📊</span><span class="nav-label" *ngIf="sidebarOpen">Resumen</span></a>
+      <a class="nav-item" routerLink="/lotes-compra">       <span class="nav-icon">🛒</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Compra</span></a>
+      <a class="nav-item" routerLink="/lotes-venta">        <span class="nav-icon">💰</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span></a>
+      <a class="nav-item" routerLink="/productores">        <span class="nav-icon">👥</span><span class="nav-label" *ngIf="sidebarOpen">Productores</span></a>
+      <a class="nav-item" routerLink="/lotes">              <span class="nav-icon">📤</span><span class="nav-label" *ngIf="sidebarOpen">Oferta de Lotes</span></a>
+      <a class="nav-item active" routerLink="/lotes-demanda"><span class="nav-icon">🛒</span><span class="nav-label" *ngIf="sidebarOpen">Demanda de Lotes</span></a>
+      <div class="nav-sep" *ngIf="sidebarOpen">Análisis</div>
+      <a class="nav-item" routerLink="/estadisticas">       <span class="nav-icon">📈</span><span class="nav-label" *ngIf="sidebarOpen">Estadísticas</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="sidebarOpen">
+        <div class="avatar">{{ auth.getUser()?.avatar }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ auth.getUser()?.name }}</span>
+          <span class="user-role">{{ auth.getUser()?.role }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="breadcrumb">
+        <span class="bc-icon">🛒</span>
+        <span class="bc-title">Demanda de Lotes</span>
+        <span class="bc-sub">— Lo que se busca hoy</span>
+      </div>
+      <span class="count-badge demanda">{{ filtradas.length }} pedidos activos</span>
+    </header>
+
+    <!-- FILTROS -->
+    <div class="filtros-bar">
+      <div class="search-wrap">
+        <span class="s-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Buscar por tipo de ganado, departamento..."
+          [(ngModel)]="busqueda" (ngModelChange)="filtrar()">
+      </div>
+      <select class="sel-filtro" [(ngModel)]="filtroTipo" (ngModelChange)="filtrar()">
+        <option value="todos">Todo el ganado</option>
+        <option *ngFor="let t of tiposGanado" [value]="t">{{ t }}</option>
+      </select>
+      <select class="sel-filtro" [(ngModel)]="filtroUrgencia" (ngModelChange)="filtrar()">
+        <option value="todos">Cualquier urgencia</option>
+        <option value="alta">🔴 Alta — necesita esta semana</option>
+        <option value="media">🟡 Media — próximas 2 semanas</option>
+        <option value="baja">🟢 Baja — sin fecha límite</option>
+      </select>
+    </div>
+
+    <!-- LEYENDA -->
+    <div class="leyenda">
+      <span class="ley-item"><span class="dot rojo">●</span> Alta urgencia — necesita el ganado esta semana</span>
+      <span class="ley-sep">·</span>
+      <span class="ley-item"><span class="dot amarillo">●</span> Media — en las próximas 2 semanas</span>
+      <span class="ley-sep">·</span>
+      <span class="ley-item"><span class="dot verde">●</span> Baja — sin fecha límite</span>
+    </div>
+
+    <!-- GRILLA DE FICHAS -->
+    <div class="fichas-grilla" *ngIf="filtradas.length > 0">
+      <div class="ficha" *ngFor="let d of filtradas" [class]="'urg-' + d.urgencia">
+
+        <!-- Tope de color -->
+        <div class="ficha-tope urg-{{ d.urgencia }}">
+          <span class="ft-id">{{ d.id }}</span>
+          <span class="ft-dot">{{ urgenciaIcono(d.urgencia) }}</span>
+        </div>
+
+        <!-- Tipo de ganado prominente -->
+        <div class="ficha-tipo">🐄 {{ d.tipoGanado }}</div>
+        <div class="ficha-raza">{{ d.raza }}</div>
+
+        <!-- Datos clave -->
+        <div class="ficha-datos">
+          <div class="fd"><span class="fdi">🔢</span><span class="fdv">{{ d.cabezas }} cabezas</span></div>
+          <div class="fd" *ngIf="d.pesoMin">
+            <span class="fdi">⚖️</span>
+            <span class="fdv">{{ d.pesoMin }}{{ d.pesoMax ? ' – ' + d.pesoMax : '+' }} kg</span>
+          </div>
+          <div class="fd"><span class="fdi">💲</span><span class="fdv">${{ d.presupuesto | number }}/cab</span></div>
+          <div class="fd"><span class="fdi">📍</span><span class="fdv">{{ d.departamento }}</span></div>
+          <div class="fd"><span class="fdi">🎯</span><span class="fdv">{{ d.destino }}</span></div>
+        </div>
+
+        <!-- Descripción -->
+        <p class="ficha-desc">{{ d.descripcion }}</p>
+
+        <!-- Footer -->
+        <div class="ficha-footer">
+          <div class="ff-agente">
+            <span class="ff-av">{{ d.comercialAvatar }}</span>
+            <span class="ff-nombre">{{ d.comercial }}</span>
+          </div>
+          <span class="ff-estado estado-{{ d.estado }}">{{ svc.estadoLabelCompra(d.estado) }}</span>
+        </div>
+
+        <!-- CTA -->
+        <button class="btn-ofrezco">💬 Tengo algo así</button>
+
+      </div>
+    </div>
+
+    <!-- EMPTY -->
+    <div class="empty" *ngIf="filtradas.length === 0">
+      <span>🔍</span>
+      <p>No hay pedidos con esos filtros.</p>
+      <button class="btn-limpiar" (click)="busqueda=''; filtroTipo='todos'; filtroUrgencia='todos'; filtrar()">Ver todos</button>
+    </div>
+
+  </main>
+</div>

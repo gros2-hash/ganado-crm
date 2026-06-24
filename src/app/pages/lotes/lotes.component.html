@@ -1,0 +1,176 @@
+<div class="crm-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+    <div class="sidebar-header">
+      <span class="logo-icon">🐄</span>
+      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard">       <span class="nav-icon">📊</span><span class="nav-label" *ngIf="sidebarOpen">Resumen</span></a>
+      <a class="nav-item" routerLink="/lotes-compra">    <span class="nav-icon">🛒</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Compra</span></a>
+      <a class="nav-item" routerLink="/lotes-venta">     <span class="nav-icon">💰</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span></a>
+      <a class="nav-item" routerLink="/productores">     <span class="nav-icon">👥</span><span class="nav-label" *ngIf="sidebarOpen">Productores</span></a>
+      <a class="nav-item active" routerLink="/lotes">    <span class="nav-icon">📤</span><span class="nav-label" *ngIf="sidebarOpen">Oferta de Lotes</span></a>
+      <a class="nav-item" routerLink="/lotes-demanda">   <span class="nav-icon">🛒</span><span class="nav-label" *ngIf="sidebarOpen">Demanda de Lotes</span></a>
+      <div class="nav-sep" *ngIf="sidebarOpen">Análisis</div>
+      <a class="nav-item" routerLink="/estadisticas">    <span class="nav-icon">📈</span><span class="nav-label" *ngIf="sidebarOpen">Estadísticas</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="sidebarOpen">
+        <div class="avatar">{{ auth.getUser()?.avatar }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ auth.getUser()?.name }}</span>
+          <span class="user-role">{{ auth.getUser()?.role }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="breadcrumb">
+        <span class="bc-icon">📤</span>
+        <span class="bc-title">Oferta de Lotes</span>
+        <span class="bc-sub">— Lo que se vende hoy</span>
+      </div>
+      <span class="count-badge">{{ ofertasFiltradas.length }} lotes disponibles</span>
+    </header>
+
+    <!-- FILTROS -->
+    <div class="filtros-bar">
+      <div class="search-wrap">
+        <span class="s-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Buscar por tipo, raza, departamento..."
+          [(ngModel)]="busqueda" (ngModelChange)="filtrar()">
+      </div>
+      <select class="sel-filtro" [(ngModel)]="filtroTipo" (ngModelChange)="filtrar()">
+        <option value="todos">Todo el ganado</option>
+        <option *ngFor="let t of tiposGanado" [value]="t">{{ t }}</option>
+      </select>
+      <select class="sel-filtro" [(ngModel)]="filtroEstado" (ngModelChange)="filtrar()">
+        <option value="todos">Cualquier estado</option>
+        <option value="disponible">🟢 Disponible</option>
+        <option value="reservado">🟡 Reservado</option>
+        <option value="negociacion">🔵 En negociación</option>
+      </select>
+    </div>
+
+    <!-- CUERPO PRINCIPAL -->
+    <div class="cuerpo" *ngIf="ofertasFiltradas.length > 0">
+
+      <!-- LISTA LATERAL -->
+      <aside class="lista-lateral">
+        <div class="lateral-titulo">Lotes en venta</div>
+        <div class="lateral-scroll">
+          <button
+            class="lote-mini"
+            *ngFor="let lote of ofertasFiltradas"
+            [class.activo]="lote.id === loteActivo?.id"
+            (click)="seleccionar(lote)"
+          >
+            <div class="lm-top">
+              <span class="lm-id">{{ lote.id }}</span>
+              <span class="lm-dot">{{ estadoIcono(lote.estado) }}</span>
+            </div>
+            <div class="lm-tipo">🐄 {{ lote.tipoGanado }}</div>
+            <div class="lm-raza">{{ lote.raza }}</div>
+            <div class="lm-fila">
+              <span class="lm-cab">{{ lote.cabezas }} cab.</span>
+              <span class="lm-precio">${{ lote.precioUnitario | number }}/cab</span>
+            </div>
+            <div class="lm-dpto">📍 {{ lote.departamento }}</div>
+            <div class="lm-agente">
+              <span class="av-xs">{{ lote.comercialAvatar }}</span>
+              {{ lote.comercial }}
+            </div>
+          </button>
+        </div>
+      </aside>
+
+      <!-- PANEL VIDEO + INFO -->
+      <section class="panel-central" *ngIf="loteActivo">
+
+        <!-- VIDEO -->
+        <div class="video-wrap">
+          <video
+            #videoEl
+            class="video-player"
+            controls
+            preload="metadata"
+            [src]="loteActivo.videoUrl"
+            (error)="onVideoError()"
+            *ngIf="!videoError"
+          ></video>
+          <div class="video-sin-señal" *ngIf="videoError">
+            <span>🎬</span><p>Video no disponible.</p>
+          </div>
+          <div class="video-badge">{{ loteActivo.id }}</div>
+        </div>
+
+        <!-- INFO -->
+        <div class="info-panel">
+
+          <div class="info-header">
+            <div class="ih-izq">
+              <h2 class="ih-tipo">🐄 {{ loteActivo.tipoGanado }} — {{ loteActivo.raza }}</h2>
+              <p class="ih-desc">{{ loteActivo.descripcion }}</p>
+            </div>
+            <div class="ih-der">
+              <span class="precio-grande">${{ loteActivo.precioUnitario | number }}</span>
+              <span class="precio-label">por cabeza</span>
+              <span class="estado-pill estado-{{ loteActivo.estado }}">
+                {{ estadoIcono(loteActivo.estado) }} {{ svc.estadoLabelVenta(loteActivo.estado) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="chips-datos">
+            <div class="chip-dato"><span class="cd-i">🔢</span><span class="cd-v">{{ loteActivo.cabezas }}</span><span class="cd-l">cabezas</span></div>
+            <div class="chip-dato"><span class="cd-i">⚖️</span><span class="cd-v">{{ loteActivo.pesoPromedio }} kg</span><span class="cd-l">peso prom.</span></div>
+            <div class="chip-dato"><span class="cd-i">📍</span><span class="cd-v">{{ loteActivo.departamento }}</span><span class="cd-l">departamento</span></div>
+            <div class="chip-dato"><span class="cd-i">🏡</span><span class="cd-v">{{ loteActivo.campo }}</span><span class="cd-l">campo</span></div>
+            <div class="chip-dato"><span class="cd-i">🎯</span><span class="cd-v">{{ loteActivo.destino }}</span><span class="cd-l">destino</span></div>
+            <div class="chip-dato"><span class="cd-i">{{ loteActivo.origen === 'chatbot' ? '🤖' : '✏️' }}</span><span class="cd-v">{{ loteActivo.origen === 'chatbot' ? 'Chatbot' : 'Manual' }}</span><span class="cd-l">origen</span></div>
+          </div>
+
+          <div class="seccion-bloque">
+            <h3 class="sb-titulo">📝 Detalles del lote</h3>
+            <p class="sb-texto">{{ loteActivo.detalles }}</p>
+          </div>
+
+          <div class="seccion-bloque">
+            <h3 class="sb-titulo">💉 Sanidad certificada</h3>
+            <div class="sanidad-row">
+              <span class="san-chip" *ngFor="let s of loteActivo.sanidad">✅ {{ s }}</span>
+            </div>
+          </div>
+
+          <div class="comercial-bloque">
+            <div class="cb-avatar">{{ loteActivo.comercialAvatar }}</div>
+            <div class="cb-info">
+              <span class="cb-label">Comercial a cargo</span>
+              <span class="cb-nombre">{{ loteActivo.comercial }}</span>
+            </div>
+            <button class="btn-contactar">📞 Contactar</button>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- EMPTY -->
+    <div class="empty" *ngIf="ofertasFiltradas.length === 0">
+      <span>🔍</span>
+      <p>No hay lotes con esos filtros.</p>
+      <button class="btn-limpiar" (click)="busqueda=''; filtroTipo='todos'; filtroEstado='todos'; filtrar()">Ver todos</button>
+    </div>
+
+  </main>
+</div>
