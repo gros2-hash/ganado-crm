@@ -1,0 +1,70 @@
+<aside class="sidebar" [class.collapsed]="!open">
+  <div class="sidebar-header">
+    <span class="logo-icon">🐄</span>
+    <span class="logo-text" *ngIf="open">GanadoCRM</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" *ngIf="open">Resumen</span>
+    </a>
+    <a class="nav-item" routerLink="/lotes-compra" routerLinkActive="active">
+      <span class="nav-icon">🛒</span>
+      <span class="nav-label" *ngIf="open">Lotes de Compra</span>
+    </a>
+    <a class="nav-item" routerLink="/lotes-venta" routerLinkActive="active">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label" *ngIf="open">Lotes de Venta</span>
+    </a>
+    <a class="nav-item" routerLink="/productores" routerLinkActive="active">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label" *ngIf="open">Productores</span>
+    </a>
+    <a class="nav-item" routerLink="/comerciales" routerLinkActive="active">
+      <span class="nav-icon">🤝</span>
+      <span class="nav-label" *ngIf="open">Comerciales</span>
+    </a>
+    <a class="nav-item" routerLink="/visualizador" routerLinkActive="active">
+      <span class="nav-icon">🎬</span>
+      <span class="nav-label" *ngIf="open">Visualizador</span>
+    </a>
+    <a class="nav-item" routerLink="/matches" routerLinkActive="active">
+      <span class="nav-icon">🔗</span>
+      <span class="nav-label" *ngIf="open">Matches</span>
+    </a>
+    <a class="nav-item" routerLink="/lotes" routerLinkActive="active">
+      <span class="nav-icon">📤</span>
+      <span class="nav-label" *ngIf="open">Oferta de Lotes</span>
+    </a>
+    <a class="nav-item" routerLink="/lotes-demanda" routerLinkActive="active">
+      <span class="nav-icon">📥</span>
+      <span class="nav-label" *ngIf="open">Demanda de Lotes</span>
+    </a>
+
+    <div class="nav-separator" *ngIf="open"><span>Análisis</span></div>
+    <div class="nav-separator-line" *ngIf="!open"></div>
+    <a class="nav-item" routerLink="/estadisticas" routerLinkActive="active">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label" *ngIf="open">Estadísticas</span>
+    </a>
+
+    <div class="nav-separator" *ngIf="open"><span>Sistema</span></div>
+    <div class="nav-separator-line" *ngIf="!open"></div>
+    <a class="nav-item" routerLink="/auditoria" routerLinkActive="active">
+      <span class="nav-icon">🔍</span>
+      <span class="nav-label" *ngIf="open">Auditoría</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info" *ngIf="open">
+      <div class="avatar">{{ user?.avatar }}</div>
+      <div class="user-meta">
+        <span class="user-name">{{ user?.name }}</span>
+        <span class="user-role">{{ user?.role }}</span>
+      </div>
+    </div>
+    <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
+  </div>
+</aside>

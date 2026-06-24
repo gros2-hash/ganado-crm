@@ -3,15 +3,17 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { StatsService, Agente, LoteStats, ProductorStats, ChatbotStats } from '../../services/stats.service';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-estadisticas',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SidebarComponent],
   templateUrl: './estadisticas.component.html',
   styleUrl: './estadisticas.component.scss',
 })
 export class EstadisticasComponent implements OnInit {
+  sidebarOpen = true;
   agentes: Agente[] = [];
   lotesCompra!: LoteStats;
   lotesVenta!: LoteStats;

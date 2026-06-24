@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { LotesVentaService } from '../../services/lotes-venta.service';
 import { LoteVenta, EstadoLoteVenta, Comprador,
          DestinoGanado, FormaPago, CondicionEntrega,
@@ -12,7 +13,7 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-lotes-venta',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SafeUrlPipe],
+  imports: [CommonModule, FormsModule, RouterModule, SafeUrlPipe, SidebarComponent],
   templateUrl: './lotes-venta.component.html',
   styleUrl: './lotes-venta.component.scss',
 })

@@ -1,65 +1,7 @@
 <div class="viz-layout">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
-    <div class="sidebar-header">
-      <span class="logo-icon">🐄</span>
-      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
-    </div>
-    <nav class="sidebar-nav">
-      <a class="nav-item" routerLink="/dashboard">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Dashboard</span>
-      </a>
-      <a class="nav-item" routerLink="/lotes-compra">
-        <span class="nav-icon">🛒</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Lotes Compra</span>
-      </a>
-      <a class="nav-item" routerLink="/lotes-venta">
-        <span class="nav-icon">📤</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Lotes Venta</span>
-      </a>
-      <a class="nav-item active" routerLink="/visualizador">
-        <span class="nav-icon">🎬</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Visualizador</span>
-      </a>
-      <a class="nav-item" routerLink="/productores">
-        <span class="nav-icon">👥</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Productores</span>
-      </a>
-      <a class="nav-item" routerLink="/matches">
-        <span class="nav-icon">🔗</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Matches</span>
-      </a>
-      <a class="nav-item" routerLink="/comerciales">
-        <span class="nav-icon">🤝</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Comerciales</span>
-      </a>
-      <a class="nav-item" routerLink="/lotes">
-        <span class="nav-icon">📤</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Oferta de Lotes</span>
-      </a>
-      <a class="nav-item" routerLink="/lotes-demanda">
-        <span class="nav-icon">🛒</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Demanda de Lotes</span>
-      </a>
-      <div class="nav-sep" *ngIf="sidebarOpen">Sistema</div>
-      <a class="nav-item" routerLink="/auditoria">
-        <span class="nav-icon">🔍</span>
-        <span class="nav-label" *ngIf="sidebarOpen">Auditoría</span>
-      </a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="user-info" *ngIf="sidebarOpen">
-        <div class="avatar">{{ auth.getUser()?.avatar }}</div>
-        <div class="user-meta">
-          <span class="user-name">{{ auth.getUser()?.name }}</span>
-          <span class="user-role">{{ auth.getUser()?.role }}</span>
-        </div>
-      </div>
-      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
-    </div>
-  </aside>
+  <app-sidebar [open]="sidebarOpen" />
 
   <!-- MAIN -->
   <main class="main-content">
