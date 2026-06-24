@@ -57,6 +57,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'comerciales',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/comerciales/comerciales.component').then(
+        (m) => m.ComercialComponent
+      ),
+  },
+  {
     path: 'auditoria',
     canActivate: [authGuard],
     loadComponent: () =>
