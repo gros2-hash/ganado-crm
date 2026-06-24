@@ -86,5 +86,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/lotes/lotes.component').then((m) => m.LotesComponent),
   },
+  {
+    path: 'lotes-demanda',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes-demanda/lotes-demanda.component').then(
+        (m) => m.LotesDemandaComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
