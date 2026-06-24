@@ -56,5 +56,13 @@ export const routes: Routes = [
         (m) => m.VisualizadorLotesComponent
       ),
   },
+  {
+    path: 'comerciales',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/comerciales/comerciales.component').then(
+        (m) => m.ComercialComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
