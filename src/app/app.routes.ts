@@ -80,5 +80,11 @@ export const routes: Routes = [
         (m) => m.AuditoriaComponent
       ),
   },
+  {
+    path: 'lotes',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes/lotes.component').then((m) => m.LotesComponent),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

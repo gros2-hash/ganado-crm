@@ -1,0 +1,319 @@
+<div class="crm-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+    <div class="sidebar-header">
+      <span class="logo-icon">🐄</span>
+      <span class="logo-text" *ngIf="sidebarOpen">GanadoCRM</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard">      <span class="nav-icon">📊</span><span class="nav-label" *ngIf="sidebarOpen">Resumen</span></a>
+      <a class="nav-item" routerLink="/lotes-compra">   <span class="nav-icon">🛒</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Compra</span></a>
+      <a class="nav-item" routerLink="/lotes-venta">    <span class="nav-icon">💰</span><span class="nav-label" *ngIf="sidebarOpen">Lotes de Venta</span></a>
+      <a class="nav-item" routerLink="/productores">    <span class="nav-icon">👥</span><span class="nav-label" *ngIf="sidebarOpen">Productores</span></a>
+      <a class="nav-item active" routerLink="/lotes">   <span class="nav-icon">🏪</span><span class="nav-label" *ngIf="sidebarOpen">Vitrina de Lotes</span></a>
+      <div class="nav-sep" *ngIf="sidebarOpen">Análisis</div>
+      <a class="nav-item" routerLink="/estadisticas">   <span class="nav-icon">📈</span><span class="nav-label" *ngIf="sidebarOpen">Estadísticas</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="sidebarOpen">
+        <div class="avatar">{{ auth.getUser()?.avatar }}</div>
+        <div class="user-meta">
+          <span class="user-name">{{ auth.getUser()?.name }}</span>
+          <span class="user-role">{{ auth.getUser()?.role }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="breadcrumb">
+        <span class="bc-title">Vitrina de Lotes</span>
+        <span class="bc-sub" *ngIf="pestana === 'oferta'">— Lo que se vende</span>
+        <span class="bc-sub" *ngIf="pestana === 'demanda'">— Lo que se busca</span>
+      </div>
+    </header>
+
+    <!-- PESTAÑAS PRINCIPALES -->
+    <div class="pestanas">
+      <button class="pestana-btn" [class.activa]="pestana === 'oferta'" (click)="pestana = 'oferta'">
+        <span class="p-icono">📤</span>
+        <span class="p-texto">Oferta — Lotes en venta</span>
+        <span class="p-count">{{ ofertas.length }}</span>
+      </button>
+      <button class="pestana-btn" [class.activa]="pestana === 'demanda'" (click)="pestana = 'demanda'">
+        <span class="p-icono">🛒</span>
+        <span class="p-texto">Demanda — Lotes buscados</span>
+        <span class="p-count">{{ demandas.length }}</span>
+      </button>
+    </div>
+
+    <!-- ═══════════════════════ OFERTA ═══════════════════════ -->
+    <div class="oferta-layout" *ngIf="pestana === 'oferta'">
+
+      <!-- Filtros oferta -->
+      <div class="filtros-oferta">
+        <div class="search-wrap">
+          <span class="s-icon">🔍</span>
+          <input class="search-big" type="text" placeholder="Buscar por tipo, raza, departamento..."
+            [(ngModel)]="busquedaOferta" (ngModelChange)="filtrarOfertas()">
+        </div>
+        <select class="sel-big" [(ngModel)]="filtroTipoOferta" (ngModelChange)="filtrarOfertas()">
+          <option value="todos">Todo el ganado</option>
+          <option *ngFor="let t of tiposGanado" [value]="t">{{ t }}</option>
+        </select>
+        <select class="sel-big" [(ngModel)]="filtroEstadoOferta" (ngModelChange)="filtrarOfertas()">
+          <option value="todos">Cualquier estado</option>
+          <option value="disponible">🟢 Disponible</option>
+          <option value="reservado">🟡 Reservado</option>
+          <option value="negociacion">🔵 En negociación</option>
+        </select>
+        <span class="result-chip">{{ ofertasFiltradas.length }} lotes</span>
+      </div>
+
+      <!-- Contenido oferta -->
+      <div class="oferta-body">
+
+        <!-- LISTA LATERAL (izquierda) -->
+        <aside class="lista-lateral" *ngIf="ofertasFiltradas.length > 0">
+          <div class="lateral-header">📋 Lotes disponibles</div>
+          <div class="lateral-scroll">
+            <button
+              class="lote-card-mini"
+              *ngFor="let lote of ofertasFiltradas"
+              [class.activo]="lote.id === loteActivo?.id"
+              (click)="seleccionarOferta(lote)"
+            >
+              <div class="lcm-top">
+                <span class="lcm-id">{{ lote.id }}</span>
+                <span class="lcm-estado">{{ estadoIcono(lote.estado) }}</span>
+              </div>
+              <div class="lcm-tipo">🐄 {{ lote.tipoGanado }}</div>
+              <div class="lcm-raza">{{ lote.raza }}</div>
+              <div class="lcm-row">
+                <span class="lcm-cab">{{ lote.cabezas }} cab.</span>
+                <span class="lcm-precio">${{ lote.precioUnitario | number }}/cab</span>
+              </div>
+              <div class="lcm-dpto">📍 {{ lote.departamento }}</div>
+              <div class="lcm-comercial">
+                <span class="av-mini">{{ lote.comercialAvatar }}</span>
+                <span>{{ lote.comercial }}</span>
+              </div>
+            </button>
+          </div>
+        </aside>
+
+        <!-- PANEL CENTRAL (video + info) -->
+        <section class="panel-central" *ngIf="loteActivo">
+
+          <!-- VIDEO PLAYER -->
+          <div class="video-wrapper">
+            <video
+              #videoEl
+              class="video-player"
+              controls
+              preload="metadata"
+              [src]="loteActivo.videoUrl"
+              (error)="onVideoError()"
+              *ngIf="!videoError"
+            ></video>
+            <div class="video-fallback" *ngIf="videoError">
+              <span class="fallback-icon">🎬</span>
+              <p>Video no disponible en este momento.</p>
+            </div>
+            <!-- overlay con ID del lote -->
+            <div class="video-id-overlay">{{ loteActivo.id }}</div>
+          </div>
+
+          <!-- INFO DEL LOTE -->
+          <div class="lote-info-panel">
+
+            <!-- Encabezado -->
+            <div class="lip-header">
+              <div class="lip-left">
+                <h2 class="lip-tipo">🐄 {{ loteActivo.tipoGanado }} — {{ loteActivo.raza }}</h2>
+                <p class="lip-desc">{{ loteActivo.descripcion }}</p>
+              </div>
+              <div class="lip-precio-bloque">
+                <span class="lip-precio">${{ loteActivo.precioUnitario | number }}</span>
+                <span class="lip-por">por cabeza</span>
+                <span class="lip-estado-badge estado-{{ loteActivo.estado }}">
+                  {{ estadoIcono(loteActivo.estado) }} {{ svc.estadoLabelVenta(loteActivo.estado) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Datos rápidos -->
+            <div class="datos-rapidos">
+              <div class="dato-chip">
+                <span class="dc-icono">🔢</span>
+                <span class="dc-val">{{ loteActivo.cabezas }}</span>
+                <span class="dc-lbl">cabezas</span>
+              </div>
+              <div class="dato-chip">
+                <span class="dc-icono">⚖️</span>
+                <span class="dc-val">{{ loteActivo.pesoPromedio }}</span>
+                <span class="dc-lbl">kg prom.</span>
+              </div>
+              <div class="dato-chip">
+                <span class="dc-icono">📍</span>
+                <span class="dc-val">{{ loteActivo.departamento }}</span>
+                <span class="dc-lbl">depto.</span>
+              </div>
+              <div class="dato-chip">
+                <span class="dc-icono">🏡</span>
+                <span class="dc-val">{{ loteActivo.campo }}</span>
+                <span class="dc-lbl">campo</span>
+              </div>
+              <div class="dato-chip">
+                <span class="dc-icono">🎯</span>
+                <span class="dc-val">{{ loteActivo.destino }}</span>
+                <span class="dc-lbl">destino</span>
+              </div>
+              <div class="dato-chip">
+                <span class="dc-icono">{{ loteActivo.origen === 'chatbot' ? '🤖' : '✏️' }}</span>
+                <span class="dc-val">{{ loteActivo.origen === 'chatbot' ? 'Chatbot' : 'Manual' }}</span>
+                <span class="dc-lbl">origen</span>
+              </div>
+            </div>
+
+            <!-- Descripción extendida -->
+            <div class="lip-seccion">
+              <h3 class="sec-titulo">📝 Detalles del lote</h3>
+              <p class="sec-texto">{{ loteActivo.detalles }}</p>
+            </div>
+
+            <!-- Sanidad -->
+            <div class="lip-seccion">
+              <h3 class="sec-titulo">💉 Sanidad</h3>
+              <div class="sanidad-tags">
+                <span class="san-tag" *ngFor="let s of loteActivo.sanidad">✅ {{ s }}</span>
+              </div>
+            </div>
+
+            <!-- Comercial -->
+            <div class="lip-comercial">
+              <div class="com-avatar">{{ loteActivo.comercialAvatar }}</div>
+              <div class="com-info">
+                <span class="com-label">Comercial a cargo</span>
+                <span class="com-nombre">{{ loteActivo.comercial }}</span>
+              </div>
+              <button class="btn-contactar">📞 Contactar</button>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- empty -->
+        <div class="empty-oferta" *ngIf="ofertasFiltradas.length === 0">
+          <span>🔍</span>
+          <p>No hay lotes de oferta con esos filtros.</p>
+          <button class="btn-limpiar" (click)="busquedaOferta=''; filtroTipoOferta='todos'; filtroEstadoOferta='todos'; filtrarOfertas()">Ver todos</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ DEMANDA ═══════════════════════ -->
+    <div class="demanda-layout" *ngIf="pestana === 'demanda'">
+
+      <!-- Filtros demanda -->
+      <div class="filtros-demanda">
+        <div class="search-wrap">
+          <span class="s-icon">🔍</span>
+          <input class="search-big" type="text" placeholder="Buscar por tipo de ganado, departamento..."
+            [(ngModel)]="busquedaDemanda" (ngModelChange)="filtrarDemandas()">
+        </div>
+        <select class="sel-big" [(ngModel)]="filtroTipoDemanda" (ngModelChange)="filtrarDemandas()">
+          <option value="todos">Todo el ganado</option>
+          <option *ngFor="let t of tiposGanado" [value]="t">{{ t }}</option>
+        </select>
+        <select class="sel-big" [(ngModel)]="filtroUrgencia" (ngModelChange)="filtrarDemandas()">
+          <option value="todos">Cualquier urgencia</option>
+          <option value="alta">🔴 Alta urgencia</option>
+          <option value="media">🟡 Media urgencia</option>
+          <option value="baja">🟢 Baja urgencia</option>
+        </select>
+        <span class="result-chip">{{ demandasFiltradas.length }} pedidos</span>
+      </div>
+
+      <!-- Leyenda urgencia -->
+      <div class="leyenda-urgencia">
+        <span class="ley-item rojo">🔴 Alta — necesita el ganado esta semana</span>
+        <span class="ley-item amarillo">🟡 Media — en las próximas 2 semanas</span>
+        <span class="ley-item verde">🟢 Baja — sin fecha límite</span>
+      </div>
+
+      <!-- GRILLA DE FICHAS -->
+      <div class="fichas-grilla" *ngIf="demandasFiltradas.length > 0">
+        <div class="ficha-cuadrada" *ngFor="let d of demandasFiltradas" [class]="'urgencia-' + d.urgencia">
+
+          <!-- Tope de color (urgencia) -->
+          <div class="ficha-tope urgencia-{{ d.urgencia }}">
+            <span class="ficha-id">{{ d.id }}</span>
+            <span class="urgencia-dot">{{ urgenciaIcono(d.urgencia) }}</span>
+          </div>
+
+          <!-- Tipo de ganado prominente -->
+          <div class="ficha-tipo">🐄 {{ d.tipoGanado }}</div>
+          <div class="ficha-raza">{{ d.raza }}</div>
+
+          <!-- Datos clave -->
+          <div class="ficha-datos">
+            <div class="fd-item">
+              <span class="fd-icono">🔢</span>
+              <span class="fd-val">{{ d.cabezas }} cab.</span>
+            </div>
+            <div class="fd-item" *ngIf="d.pesoMin">
+              <span class="fd-icono">⚖️</span>
+              <span class="fd-val">{{ d.pesoMin }}{{ d.pesoMax ? '–' + d.pesoMax : '+' }} kg</span>
+            </div>
+            <div class="fd-item">
+              <span class="fd-icono">💲</span>
+              <span class="fd-val">${{ d.presupuesto | number }}/cab</span>
+            </div>
+            <div class="fd-item">
+              <span class="fd-icono">📍</span>
+              <span class="fd-val">{{ d.departamento }}</span>
+            </div>
+            <div class="fd-item">
+              <span class="fd-icono">🎯</span>
+              <span class="fd-val">{{ d.destino }}</span>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <p class="ficha-desc">{{ d.descripcion }}</p>
+
+          <!-- Footer: comercial + estado -->
+          <div class="ficha-footer">
+            <div class="ff-comercial">
+              <span class="av-cuadrado">{{ d.comercialAvatar }}</span>
+              <span class="ff-nombre">{{ d.comercial }}</span>
+            </div>
+            <span class="ff-estado estado-{{ d.estado }}">{{ svc.estadoLabelCompra(d.estado) }}</span>
+          </div>
+
+          <!-- Botón de acción -->
+          <button class="btn-ofrezco">💬 Tengo algo así</button>
+
+        </div>
+      </div>
+
+      <!-- empty -->
+      <div class="empty-demanda" *ngIf="demandasFiltradas.length === 0">
+        <span>🔍</span>
+        <p>No hay pedidos de compra con esos filtros.</p>
+        <button class="btn-limpiar" (click)="busquedaDemanda=''; filtroTipoDemanda='todos'; filtroUrgencia='todos'; filtrarDemandas()">Ver todos</button>
+      </div>
+
+    </div>
+
+  </main>
+</div>
