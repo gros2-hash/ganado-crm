@@ -1,29 +1,11 @@
 <div class="crm-layout">
   <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-header"><span>🐄</span><span class="logo-text">GanadoCRM</span></div>
-    <nav class="sidebar-nav">
-      <a class="nav-item" routerLink="/dashboard"><span>📊</span><span>Resumen</span></a>
-      <a class="nav-item" routerLink="/lotes-compra"><span>🛒</span><span>Lotes de Compra</span></a>
-      <a class="nav-item" routerLink="/lotes-venta"><span>💰</span><span>Lotes de Venta</span></a>
-      <a class="nav-item" routerLink="/productores"><span>👥</span><span>Productores</span></a>
-      <a class="nav-item" routerLink="/matches"><span>🔗</span><span>Matches</span></a>
-      <a class="nav-item" routerLink="/comerciales"><span>🤝</span><span>Comerciales</span></a>
-      <a class="nav-item" routerLink="/lotes"><span>📤</span><span>Oferta de Lotes</span></a>
-      <a class="nav-item" routerLink="/lotes-demanda"><span>🛒</span><span>Demanda de Lotes</span></a>
-      <div class="nav-sep">Análisis</div>
-      <a class="nav-item active" routerLink="/estadisticas"><span>📈</span><span>Estadísticas</span></a>
-      <div class="nav-sep">Sistema</div>
-      <a class="nav-item" routerLink="/auditoria"><span>🔍</span><span>Auditoría</span></a>
-    </nav>
-    <div class="sidebar-footer">
-      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">⏻</button>
-    </div>
-  </aside>
+  <app-sidebar [open]="sidebarOpen" />
 
   <!-- MAIN -->
   <main class="main-content">
     <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
       <div class="page-title"><h2>Estadísticas</h2></div>
       <div class="topbar-right"><span class="fecha">Noviembre 2024</span></div>
     </header>

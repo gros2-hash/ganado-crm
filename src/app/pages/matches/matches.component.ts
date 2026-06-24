@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { MatchesService } from '../../services/matches.service';
 import { Match, EstadoMatch } from '../../models/match.model';
 
 @Component({
   selector: 'app-matches',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
   templateUrl: './matches.component.html',
   styleUrl: './matches.component.scss',
 })

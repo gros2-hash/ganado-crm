@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { ProductoresService } from '../../services/productores.service';
 import { Productor, CategoriaProductor, EstadoProductor,
          MedioContacto, PrioridadContacto } from '../../models/productor.model';
@@ -10,7 +11,7 @@ import { Productor, CategoriaProductor, EstadoProductor,
 @Component({
   selector: 'app-productores',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
   templateUrl: './productores.component.html',
   styleUrl:    './productores.component.scss',
 })

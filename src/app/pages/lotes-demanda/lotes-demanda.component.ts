@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { LotesMarketplaceService, LoteDemanda } from '../../services/lotes-marketplace.service';
 
 @Component({
   selector: 'app-lotes-demanda',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
   templateUrl: './lotes-demanda.component.html',
   styleUrl: './lotes-demanda.component.scss',
 })

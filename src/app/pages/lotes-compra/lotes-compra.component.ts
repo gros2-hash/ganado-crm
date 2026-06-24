@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { LotesCompraService } from '../../services/lotes-compra.service';
 import { LoteCompra, EstadoLote, FlujoChatbot, MensajeChatbot } from '../../models/lote-compra.model';
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
@@ -10,7 +11,7 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-lotes-compra',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SafeUrlPipe],
+  imports: [CommonModule, FormsModule, RouterModule, SafeUrlPipe, SidebarComponent],
   templateUrl: './lotes-compra.component.html',
   styleUrl: './lotes-compra.component.scss',
 })
