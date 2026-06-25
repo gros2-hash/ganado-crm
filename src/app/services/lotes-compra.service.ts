@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LoteCompra, EstadoLote } from '../models/lote-compra.model';
+import { LoteCompra, EstadoLote, ClaseAnimal, EstadoAnimal } from '../models/lote-compra.model';
 
 @Injectable({ providedIn: 'root' })
 export class LotesCompraService {
@@ -9,8 +9,10 @@ export class LotesCompraService {
       descripcion: 'Lote de novillos gordos listos para faena, excelente estado corporal, campo natural',
       cliente: { nombre: 'Juan Fernández', celular: '+598 99 123 456', email: 'jfernandez@campo.uy', localidad: 'Tacuarembó' },
       videoLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      tipoGanado: 'Novillos', raza: 'Hereford', cantidadCabezas: 120,
-      precioUnitario: 1850, pesoPromedio: 480, campo: 'Est. La Querencia', departamento: 'Tacuarembó',
+      tipoGanado: 'Novillos', raza: 'Hereford', cantidadCabezas: 120, categoria: 'Novillo gordo',
+      precioUnitario: 1850, pesoPromedio: 480, claseAnimal: 'MB', estadoAnimal: 'BMB',
+      campo: 'Est. La Querencia', departamento: 'Tacuarembó', paraje: 'Paso del Cerro',
+      detalleUbicacion: 'a 12km de ruta 5 norte', precioMinKg: 3.80, precioMaxKg: 4.20,
       estado: 'negociacion', origen: 'chatbot', agente: 'Martín Pérez', agenteAvatar: 'MP',
       fechaCreacion: '2024-11-02', fechaActualizacion: '2024-11-10',
       observaciones: 'Cliente muy interesado, solicitó visita al campo el 15/11',
@@ -54,8 +56,10 @@ export class LotesCompraService {
       descripcion: 'Terneros destetados, muy uniformes, con todos los registros sanitarios al día',
       cliente: { nombre: 'Roberto Silva', celular: '+598 98 765 432', email: 'rsilva@estancia.com', localidad: 'Rivera' },
       videoLink: 'https://www.youtube.com/watch?v=abc123',
-      tipoGanado: 'Terneros', raza: 'Aberdeen Angus', cantidadCabezas: 85,
-      precioUnitario: 920, pesoPromedio: 210, campo: 'Est. Don Carlos', departamento: 'Rivera',
+      tipoGanado: 'Terneros', raza: 'Aberdeen Angus', cantidadCabezas: 85, categoria: 'Ternero destete',
+      precioUnitario: 920, pesoPromedio: 210, claseAnimal: 'B', estadoAnimal: 'MB',
+      campo: 'Est. Don Carlos', departamento: 'Rivera', paraje: 'Tranqueras',
+      detalleUbicacion: 'a 8km de ruta 30', precioMinKg: 3.20, precioMaxKg: 3.60,
       estado: 'contactado', origen: 'chatbot', agente: 'Laura Gómez', agenteAvatar: 'LG',
       fechaCreacion: '2024-11-08', fechaActualizacion: '2024-11-09',
       observaciones: 'Terneros Aberdeen de calidad, cliente regular del mercado',
@@ -83,8 +87,10 @@ export class LotesCompraService {
       descripcion: 'Vacas con cría, excelente condición corporal, campo mejorado con lotus y trébol',
       cliente: { nombre: 'María Pérez', celular: '+598 91 234 567', localidad: 'Flores' },
       videoLink: 'https://www.youtube.com/watch?v=xyz789',
-      tipoGanado: 'Vacas con cría', raza: 'Criolla', cantidadCabezas: 45,
-      precioUnitario: 2100, pesoPromedio: 390, campo: 'Est. Las Flores', departamento: 'Flores',
+      tipoGanado: 'Vacas con cría', raza: 'Criolla', cantidadCabezas: 45, categoria: 'Vaca con cría al pie',
+      precioUnitario: 2100, pesoPromedio: 390, claseAnimal: 'BMB', estadoAnimal: 'B',
+      campo: 'Est. Las Flores', departamento: 'Flores', paraje: 'Trinidad',
+      detalleUbicacion: 'a 3km de acceso pavimentado', precioMinKg: 2.90, precioMaxKg: 3.30,
       estado: 'nuevo', origen: 'manual', agente: 'Diego Rodríguez', agenteAvatar: 'DR',
       fechaCreacion: '2024-11-12', fechaActualizacion: '2024-11-12',
       flujosChatbot: []
@@ -94,8 +100,10 @@ export class LotesCompraService {
       descripcion: 'Novillos de recría, uniformes, buen marco óseo, listo para engordar',
       cliente: { nombre: 'Carlos Bentancur', celular: '+598 94 456 789', email: 'cbentancur@gmail.com', localidad: 'Salto' },
       videoLink: 'https://www.youtube.com/watch?v=lmn456',
-      tipoGanado: 'Novillos', raza: 'Hereford x Aberdeen', cantidadCabezas: 200,
-      precioUnitario: 1920, pesoPromedio: 350, campo: 'Est. San Jorge', departamento: 'Salto',
+      tipoGanado: 'Novillos', raza: 'Hereford x Aberdeen', cantidadCabezas: 200, categoria: 'Novillo recría',
+      precioUnitario: 1920, pesoPromedio: 350, claseAnimal: 'B', estadoAnimal: 'MB',
+      campo: 'Est. San Jorge', departamento: 'Salto', paraje: 'Belén',
+      detalleUbicacion: 'a 18km de ruta 3', precioMinKg: 3.50, precioMaxKg: 3.90,
       estado: 'cerrado', origen: 'chatbot', agente: 'Martín Pérez', agenteAvatar: 'MP',
       fechaCreacion: '2024-11-01', fechaActualizacion: '2024-11-10',
       observaciones: 'Operación cerrada el 10/11. Entrega coordinada para el 20/11.',
@@ -121,8 +129,10 @@ export class LotesCompraService {
       descripcion: 'Toros reproductores de alto valor genético, certificados por INAC',
       cliente: { nombre: 'Eduardo Suárez', celular: '+598 99 888 777', localidad: 'Paysandú' },
       videoLink: 'https://www.youtube.com/watch?v=pqr321',
-      tipoGanado: 'Toros', raza: 'Aberdeen Angus', cantidadCabezas: 15,
-      precioUnitario: 4500, campo: 'Cabaña El Ombú', departamento: 'Paysandú',
+      tipoGanado: 'Toros', raza: 'Aberdeen Angus', cantidadCabezas: 15, categoria: 'Toro reproductor',
+      precioUnitario: 4500, pesoPromedio: 620, claseAnimal: 'MB', estadoAnimal: 'MB',
+      campo: 'Cabaña El Ombú', departamento: 'Paysandú', paraje: 'Quebracho',
+      detalleUbicacion: 'acceso directo desde ruta 3', precioMinKg: 5.50, precioMaxKg: 7.00,
       estado: 'negociacion', origen: 'chatbot', agente: 'Ana Silveira', agenteAvatar: 'AS',
       fechaCreacion: '2024-11-12', fechaActualizacion: '2024-11-13',
       flujosChatbot: [
