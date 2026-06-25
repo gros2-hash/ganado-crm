@@ -2,10 +2,10 @@ export interface LoteVisual {
   id:              string;           // LC-0001 | LV-0001
   tipo:            'compra' | 'venta';
   descripcion:     string;
-  videoLink:       string;           // URL original
-  videoId:         string | null;    // YouTube video ID extraído
-  thumbnailUrl:    string;           // img.youtube.com o placeholder
-  embedUrl:        string;           // URL para el iframe
+  videoLink:       string;
+  videoId:         string | null;
+  thumbnailUrl:    string;
+  embedUrl:        string;
   tipoGanado:      string;
   raza:            string;
   cantidadCabezas: number;
@@ -20,6 +20,15 @@ export interface LoteVisual {
   contactoNombre:  string;
   contactoCelular: string;
   contactoEmpresa?: string;
+  // compra-only: ficha técnica
+  pesoPromedio?:      number;   // kg
+  claseAnimal?:       string;   // MB | B | BMB | G
+  estadoAnimal?:      string;   // MB | B | BMB | BR
+  categoria?:         string;
+  paraje?:            string;
+  detalleUbicacion?:  string;
+  precioMinKg?:       number;   // USD/kg
+  precioMaxKg?:       number;   // USD/kg
   // venta-only
   destino?:        string;
   formaPago?:      string;

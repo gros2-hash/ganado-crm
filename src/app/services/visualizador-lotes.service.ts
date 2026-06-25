@@ -94,6 +94,15 @@ export class VisualizadorLotesService {
         contactoCelular: l.cliente.celular,
         totalFlujos: l.flujosChatbot.length,
         observaciones: l.observaciones,
+        // ficha técnica
+        pesoPromedio:     l.pesoPromedio,
+        claseAnimal:      l.claseAnimal,
+        estadoAnimal:     l.estadoAnimal,
+        categoria:        l.categoria,
+        paraje:           l.paraje,
+        detalleUbicacion: l.detalleUbicacion,
+        precioMinKg:      l.precioMinKg,
+        precioMaxKg:      l.precioMaxKg,
       };
     });
 

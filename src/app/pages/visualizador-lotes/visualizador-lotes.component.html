@@ -81,47 +81,103 @@
         </div>
       </div>
 
-      <!-- GRILLA VIDEOS -->
+      <!-- GRILLA -->
       <div class="video-grid" *ngIf="lotesFiltrados.length > 0">
-        <div class="video-card" *ngFor="let lote of lotesFiltrados; let i = index"
-          (click)="abrirDetalle(lote, i)" [class.compra]="lote.tipo === 'compra'" [class.venta]="lote.tipo === 'venta'">
+        <ng-container *ngFor="let lote of lotesFiltrados; let i = index">
 
-          <!-- THUMBNAIL -->
-          <div class="card-thumb">
-            <img [src]="lote.thumbnailUrl" [alt]="lote.descripcion"
-              (error)="thumbnailError($event)" loading="lazy">
-            <div class="thumb-overlay">
-              <div class="play-btn">▶</div>
+          <!-- ── CARD VENTA: con video / thumbnail ── -->
+          <div class="video-card venta" *ngIf="lote.tipo === 'venta'"
+            (click)="abrirDetalle(lote, i)">
+            <div class="card-thumb">
+              <img [src]="lote.thumbnailUrl" [alt]="lote.descripcion"
+                (error)="thumbnailError($event)" loading="lazy">
+              <div class="thumb-overlay">
+                <div class="play-btn">▶</div>
+              </div>
+              <span class="tipo-badge venta">📤 Venta</span>
+              <span class="origen-badge" *ngIf="lote.origen === 'chatbot'">🤖</span>
             </div>
-            <span class="tipo-badge" [class.compra]="lote.tipo === 'compra'" [class.venta]="lote.tipo === 'venta'">
-              {{ lote.tipo === 'compra' ? '🛒 Compra' : '📤 Venta' }}
-            </span>
-            <span class="origen-badge" *ngIf="lote.origen === 'chatbot'">🤖</span>
+            <div class="card-info">
+              <div class="card-header-row">
+                <span class="card-id">{{ lote.id }}</span>
+                <span class="card-dpto">{{ lote.departamento }}</span>
+              </div>
+              <p class="card-desc">{{ lote.descripcion }}</p>
+              <div class="card-stats">
+                <span class="stat">🐄 {{ lote.cantidadCabezas }} cab.</span>
+                <span class="stat">{{ lote.tipoGanado }} · {{ lote.raza }}</span>
+              </div>
+              <div class="card-footer-row">
+                <span class="card-price">${{ lote.precioUnitario | number }}<small>/cab</small></span>
+                <span class="estado-pill" [ngClass]="estadoClass(lote.estado)">{{ lote.estado }}</span>
+              </div>
+            </div>
           </div>
 
-          <!-- INFO MÍNIMA -->
-          <div class="card-info">
-            <div class="card-header-row">
-              <span class="card-id">{{ lote.id }}</span>
-              <span class="card-dpto">{{ lote.departamento }}</span>
+          <!-- ── CARD COMPRA: ficha sin video ── -->
+          <div class="video-card ficha-compra" *ngIf="lote.tipo === 'compra'"
+            (click)="abrirDetalle(lote, i)">
+
+            <!-- Cabecera -->
+            <div class="fc-header">
+              <div class="fc-header-left">
+                <span class="tipo-badge compra">🛒 Compra</span>
+                <span class="origen-badge" *ngIf="lote.origen === 'chatbot'">🤖</span>
+              </div>
+              <div class="fc-header-right">
+                <span class="card-id">{{ lote.id }}</span>
+                <span class="card-dpto">{{ lote.departamento }}</span>
+              </div>
             </div>
-            <p class="card-desc">{{ lote.descripcion }}</p>
-            <div class="card-stats">
-              <span class="stat">🐄 {{ lote.cantidadCabezas }} cab.</span>
-              <span class="stat">{{ lote.tipoGanado }} · {{ lote.raza }}</span>
+
+            <!-- Tipo de ganado + clase + estado -->
+            <div class="fc-ganado">
+              <span class="fcg-tipo">{{ lote.tipoGanado }}</span>
+              <span class="fcg-raza">{{ lote.raza }}</span>
+              <span class="fcg-tag clase" *ngIf="lote.claseAnimal">{{ lote.claseAnimal }}</span>
+              <span class="fcg-tag estanimal" *ngIf="lote.estadoAnimal">{{ lote.estadoAnimal }}</span>
             </div>
-            <div class="card-footer-row">
-              <span class="card-price">${{ lote.precioUnitario | number }}<small>/cab</small></span>
+
+            <!-- Ubicación -->
+            <div class="fc-ubicacion" *ngIf="lote.paraje || lote.departamento">
+              <span class="ubi-pin">📍</span>
+              <span class="ubi-lugar">{{ lote.paraje ? lote.paraje + ' / ' : '' }}{{ lote.departamento }}</span>
+              <span class="ubi-det" *ngIf="lote.detalleUbicacion">{{ lote.detalleUbicacion }}</span>
+            </div>
+
+            <!-- Stats clave -->
+            <div class="fc-stats">
+              <div class="fcs">
+                <span class="fcs-lbl">Cabezas</span>
+                <span class="fcs-val">{{ lote.cantidadCabezas }}</span>
+              </div>
+              <div class="fcs" *ngIf="lote.pesoPromedio">
+                <span class="fcs-lbl">Peso prom.</span>
+                <span class="fcs-val peso">{{ lote.pesoPromedio }} kg</span>
+              </div>
+              <div class="fcs" *ngIf="lote.precioMinKg && lote.precioMaxKg">
+                <span class="fcs-lbl">USD/kg</span>
+                <span class="fcs-val precio">{{ lote.precioMinKg }} – {{ lote.precioMaxKg }}</span>
+              </div>
+            </div>
+
+            <!-- Descripción breve -->
+            <p class="fc-desc">{{ lote.descripcion }}</p>
+
+            <!-- Footer -->
+            <div class="fc-footer">
               <span class="estado-pill" [ngClass]="estadoClass(lote.estado)">{{ lote.estado }}</span>
+              <span class="ag-avatar small">{{ lote.agenteAvatar }}</span>
             </div>
           </div>
-        </div>
+
+        </ng-container>
       </div>
 
       <!-- EMPTY STATE -->
       <div class="empty-state" *ngIf="lotesFiltrados.length === 0">
         <span>🎬</span>
-        <p>No hay lotes con video para estos filtros.</p>
+        <p>No hay lotes para estos filtros.</p>
         <button class="btn-reset-lg" (click)="resetFiltros()">Ver todos los lotes</button>
       </div>
 
@@ -130,10 +186,9 @@
     <!-- ═══════════════════ VISTA DETALLE ═══════════════════ -->
     <section class="detalle-view" *ngIf="modoVista === 'detalle' && loteActivo">
 
-      <!-- VIDEO PLAYER AREA -->
-      <div class="player-area">
+      <!-- ── PLAYER AREA (solo venta) ── -->
+      <div class="player-area" *ngIf="loteActivo.tipo === 'venta'">
 
-        <!-- Flecha anterior -->
         <button class="arrow-nav arrow-prev"
           [class.hidden]="indiceActivo === 0"
           (click)="irAnterior()" title="Lote anterior (←)">
@@ -141,16 +196,12 @@
           <small *ngIf="indiceActivo > 0">{{ lotesFiltrados[indiceActivo - 1].id }}</small>
         </button>
 
-        <!-- Video / Thumbnail -->
         <div class="player-box">
-          <!-- IFRAME cuando está reproduciendo -->
           <iframe *ngIf="videoActivo && loteActivo.embedUrl"
             [src]="loteActivo.embedUrl | safeUrl"
             frameborder="0" allowfullscreen
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
           </iframe>
-
-          <!-- THUMBNAIL + play cuando no está reproduciendo -->
           <div class="player-thumb" *ngIf="!videoActivo" (click)="reproducir()">
             <img [src]="loteActivo.thumbnailUrl" [alt]="loteActivo.descripcion"
               (error)="thumbnailError($event)">
@@ -159,15 +210,12 @@
               <span>Reproducir video</span>
             </div>
           </div>
-
-          <!-- Sin video -->
           <div class="no-video-msg" *ngIf="!loteActivo.videoId && !videoActivo">
             <span>📷</span>
             <p>Este lote no tiene video registrado.</p>
           </div>
         </div>
 
-        <!-- Flecha siguiente -->
         <button class="arrow-nav arrow-next"
           [class.hidden]="indiceActivo === lotesFiltrados.length - 1"
           (click)="irSiguiente()" title="Lote siguiente (→)">
@@ -177,15 +225,136 @@
 
       </div>
 
+      <!-- ── FICHA COMPRA (detalle) ── -->
+      <div class="ficha-detalle" *ngIf="loteActivo.tipo === 'compra'">
+
+        <button class="arrow-nav arrow-prev"
+          [class.hidden]="indiceActivo === 0"
+          (click)="irAnterior()" title="Lote anterior (←)">
+          <span>‹</span>
+          <small *ngIf="indiceActivo > 0">{{ lotesFiltrados[indiceActivo - 1].id }}</small>
+        </button>
+
+        <div class="fd-body">
+
+          <div class="fd-top-badge">
+            <span class="tipo-badge compra">🛒 Lote de Compra</span>
+            <span class="fd-lote-id">{{ loteActivo.id }}</span>
+          </div>
+
+          <div class="fd-grid">
+
+            <!-- Hacienda -->
+            <div class="fd-section">
+              <h4 class="fds-title">🐄 Hacienda</h4>
+              <div class="fds-row hero">
+                <span class="fds-k">Tipo</span>
+                <span class="fds-v big">{{ loteActivo.tipoGanado }}</span>
+              </div>
+              <div class="fds-row" *ngIf="loteActivo.categoria">
+                <span class="fds-k">Categoría</span>
+                <span class="fds-v">{{ loteActivo.categoria }}</span>
+              </div>
+              <div class="fds-row">
+                <span class="fds-k">Raza</span>
+                <span class="fds-v">{{ loteActivo.raza }}</span>
+              </div>
+              <div class="fds-row hero">
+                <span class="fds-k">Cabezas</span>
+                <span class="fds-v big green">{{ loteActivo.cantidadCabezas }}</span>
+              </div>
+              <div class="fds-row hero" *ngIf="loteActivo.pesoPromedio">
+                <span class="fds-k">Peso prom.</span>
+                <span class="fds-v big green">{{ loteActivo.pesoPromedio }} kg</span>
+              </div>
+              <div class="fds-tags" *ngIf="loteActivo.claseAnimal || loteActivo.estadoAnimal">
+                <div *ngIf="loteActivo.claseAnimal">
+                  <span class="fds-label">Clase</span>
+                  <span class="fd-tag clase">{{ loteActivo.claseAnimal }}</span>
+                </div>
+                <div *ngIf="loteActivo.estadoAnimal">
+                  <span class="fds-label">Estado animal</span>
+                  <span class="fd-tag estanimal">{{ loteActivo.estadoAnimal }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Precio -->
+            <div class="fd-section fd-price-section">
+              <h4 class="fds-title">💵 Precio (USD/kg)</h4>
+              <div class="fd-price-block" *ngIf="loteActivo.precioMinKg || loteActivo.precioMaxKg">
+                <div class="fd-price-row" *ngIf="loteActivo.precioMinKg">
+                  <span class="fp-label">Mínimo</span>
+                  <span class="fp-val">${{ loteActivo.precioMinKg }} <small>USD/kg</small></span>
+                </div>
+                <div class="fd-price-row" *ngIf="loteActivo.precioMaxKg">
+                  <span class="fp-label">Máximo</span>
+                  <span class="fp-val highlight">${{ loteActivo.precioMaxKg }} <small>USD/kg</small></span>
+                </div>
+                <div class="fd-ref-total" *ngIf="loteActivo.pesoPromedio && loteActivo.precioMaxKg">
+                  Ref. total: ~USD ${{ (loteActivo.cantidadCabezas * loteActivo.pesoPromedio * loteActivo.precioMaxKg) | number:'1.0-0' }}
+                </div>
+              </div>
+              <div class="fds-row mt-sm">
+                <span class="fds-k">Precio/cab.</span>
+                <span class="fds-v">${{ loteActivo.precioUnitario | number }}</span>
+              </div>
+            </div>
+
+            <!-- Ubicación -->
+            <div class="fd-section">
+              <h4 class="fds-title">📍 Ubicación</h4>
+              <div class="fd-ubic-main">
+                <span *ngIf="loteActivo.paraje" class="ubic-paraje">{{ loteActivo.paraje }}</span>
+                <span *ngIf="loteActivo.paraje" class="ubic-sep"> / </span>
+                <span class="ubic-dpto">{{ loteActivo.departamento }}</span>
+              </div>
+              <div class="fd-ubic-det" *ngIf="loteActivo.detalleUbicacion">{{ loteActivo.detalleUbicacion }}</div>
+              <div class="fds-row mt-sm">
+                <span class="fds-k">Campo</span>
+                <span class="fds-v">{{ loteActivo.campo }}</span>
+              </div>
+            </div>
+
+          </div><!-- fd-grid -->
+
+          <!-- Catálogo -->
+          <div class="fd-catalogo">
+            <h4 class="fds-title">📋 Catálogo</h4>
+            <p class="fd-cat-desc">{{ loteActivo.descripcion }}</p>
+            <p class="fd-cat-obs" *ngIf="loteActivo.observaciones">{{ loteActivo.observaciones }}</p>
+          </div>
+
+        </div><!-- fd-body -->
+
+        <button class="arrow-nav arrow-next"
+          [class.hidden]="indiceActivo === lotesFiltrados.length - 1"
+          (click)="irSiguiente()" title="Lote siguiente (→)">
+          <span>›</span>
+          <small *ngIf="indiceActivo < lotesFiltrados.length - 1">{{ lotesFiltrados[indiceActivo + 1].id }}</small>
+        </button>
+
+      </div><!-- ficha-detalle -->
+
       <!-- MINIATURAS NAVEGACIÓN -->
       <div class="thumb-strip" *ngIf="lotesFiltrados.length > 1">
-        <div class="thumb-item"
-          *ngFor="let l of lotesFiltrados; let i = index"
-          [class.active]="i === indiceActivo"
-          (click)="abrirDetalle(l, i)">
-          <img [src]="l.thumbnailUrl" [alt]="l.id" (error)="thumbnailError($event)">
-          <span class="thumb-id">{{ l.id }}</span>
-        </div>
+        <ng-container *ngFor="let l of lotesFiltrados; let i = index">
+          <!-- Venta: thumbnail imagen -->
+          <div class="thumb-item" *ngIf="l.tipo === 'venta'"
+            [class.active]="i === indiceActivo" (click)="abrirDetalle(l, i)">
+            <img [src]="l.thumbnailUrl" [alt]="l.id" (error)="thumbnailError($event)">
+            <span class="thumb-id">{{ l.id }}</span>
+          </div>
+          <!-- Compra: indicador ficha -->
+          <div class="thumb-item thumb-compra" *ngIf="l.tipo === 'compra'"
+            [class.active]="i === indiceActivo" (click)="abrirDetalle(l, i)">
+            <div class="thumb-ficha-indicator">
+              <span>🛒</span>
+              <span class="tfi-tipo">{{ l.tipoGanado }}</span>
+            </div>
+            <span class="thumb-id">{{ l.id }}</span>
+          </div>
+        </ng-container>
       </div>
 
       <!-- INFO COMPLETA -->
@@ -205,14 +374,24 @@
             <h2 class="dh-desc">{{ loteActivo.descripcion }}</h2>
           </div>
           <div class="dh-right">
-            <div class="dh-precio">
-              <span class="precio-val">${{ loteActivo.precioUnitario | number }}</span>
-              <span class="precio-lbl">por cabeza</span>
-            </div>
-            <div class="dh-total">
-              <span class="total-val">${{ valorTotal(loteActivo) | number }}</span>
-              <span class="total-lbl">valor total</span>
-            </div>
+            <!-- Compra: precio en USD/kg -->
+            <ng-container *ngIf="loteActivo.tipo === 'compra' && loteActivo.precioMinKg">
+              <div class="dh-precio">
+                <span class="precio-val">${{ loteActivo.precioMinKg }} – ${{ loteActivo.precioMaxKg }}</span>
+                <span class="precio-lbl">USD / kg</span>
+              </div>
+            </ng-container>
+            <!-- Venta: precio por cabeza -->
+            <ng-container *ngIf="loteActivo.tipo === 'venta'">
+              <div class="dh-precio">
+                <span class="precio-val">${{ loteActivo.precioUnitario | number }}</span>
+                <span class="precio-lbl">por cabeza</span>
+              </div>
+              <div class="dh-total">
+                <span class="total-val">${{ valorTotal(loteActivo) | number }}</span>
+                <span class="total-lbl">valor total</span>
+              </div>
+            </ng-container>
           </div>
         </div>
 
@@ -227,6 +406,10 @@
                 <span class="ic-lbl">Tipo</span>
                 <span class="ic-val">{{ loteActivo.tipoGanado }}</span>
               </div>
+              <div class="ic-item" *ngIf="loteActivo.categoria">
+                <span class="ic-lbl">Categoría</span>
+                <span class="ic-val">{{ loteActivo.categoria }}</span>
+              </div>
               <div class="ic-item">
                 <span class="ic-lbl">Raza</span>
                 <span class="ic-val">{{ loteActivo.raza }}</span>
@@ -235,9 +418,17 @@
                 <span class="ic-lbl">Cabezas</span>
                 <span class="ic-val font-big">{{ loteActivo.cantidadCabezas }}</span>
               </div>
-              <div class="ic-item">
-                <span class="ic-lbl">Precio/cab</span>
-                <span class="ic-val font-big green">${{ loteActivo.precioUnitario | number }}</span>
+              <div class="ic-item" *ngIf="loteActivo.pesoPromedio">
+                <span class="ic-lbl">Peso prom.</span>
+                <span class="ic-val font-big">{{ loteActivo.pesoPromedio }} kg</span>
+              </div>
+              <div class="ic-item" *ngIf="loteActivo.claseAnimal">
+                <span class="ic-lbl">Clase</span>
+                <span class="ic-val"><span class="fd-tag clase">{{ loteActivo.claseAnimal }}</span></span>
+              </div>
+              <div class="ic-item" *ngIf="loteActivo.estadoAnimal">
+                <span class="ic-lbl">Estado animal</span>
+                <span class="ic-val"><span class="fd-tag estanimal">{{ loteActivo.estadoAnimal }}</span></span>
               </div>
               <div class="ic-item">
                 <span class="ic-lbl">Campo</span>
@@ -246,6 +437,14 @@
               <div class="ic-item">
                 <span class="ic-lbl">Departamento</span>
                 <span class="ic-val">{{ loteActivo.departamento }}</span>
+              </div>
+              <div class="ic-item" *ngIf="loteActivo.paraje">
+                <span class="ic-lbl">Paraje</span>
+                <span class="ic-val">{{ loteActivo.paraje }}</span>
+              </div>
+              <div class="ic-item full" *ngIf="loteActivo.detalleUbicacion">
+                <span class="ic-lbl">Detalle ubicación</span>
+                <span class="ic-val">{{ loteActivo.detalleUbicacion }}</span>
               </div>
             </div>
           </div>
