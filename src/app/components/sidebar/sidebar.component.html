@@ -33,16 +33,8 @@
       <span class="nav-icon">🔗</span>
       <span class="nav-label" *ngIf="open">Matches</span>
     </a>
-    <a class="nav-item" routerLink="/lotes" routerLinkActive="active">
-      <span class="nav-icon">📤</span>
-      <span class="nav-label" *ngIf="open">Oferta de Lotes</span>
-    </a>
-    <a class="nav-item" routerLink="/lotes-demanda" routerLinkActive="active">
-      <span class="nav-icon">📥</span>
-      <span class="nav-label" *ngIf="open">Demanda de Lotes</span>
-    </a>
 
-    <div class="nav-separator" *ngIf="open"><span>Análisis</span></div>
+<div class="nav-separator" *ngIf="open"><span>Análisis</span></div>
     <div class="nav-separator-line" *ngIf="!open"></div>
     <a class="nav-item" routerLink="/estadisticas" routerLinkActive="active">
       <span class="nav-icon">📈</span>
