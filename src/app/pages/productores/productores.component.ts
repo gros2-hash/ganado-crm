@@ -8,6 +8,8 @@ import { ProductoresService } from '../../services/productores.service';
 import { Productor, CategoriaProductor, EstadoProductor,
          MedioContacto, PrioridadContacto } from '../../models/productor.model';
 
+type SeccionKey = 'contacto' | 'perfil' | 'historial' | 'registrar';
+
 @Component({
   selector: 'app-productores',
   standalone: true,
@@ -18,24 +20,33 @@ import { Productor, CategoriaProductor, EstadoProductor,
 export class ProductoresComponent implements OnInit {
   productores: Productor[] = [];
   filtrados:   Productor[] = [];
-  seleccionado: Productor | null = null;
-  modoVista: 'lista' | 'ficha' | 'nuevo' = 'lista';
-  sidebarOpen = true;
+  urgentes:    Productor[] = [];
+  sidebarOpen  = true;
   formGuardado = false;
 
   // Filtros
-  busqueda       = '';
+  busqueda        = '';
   filtroCategoria = 'todos';
   filtroEstado    = 'todos';
   filtroDpto      = 'todos';
-  filtroContacto  = 'todos';   // 'todos' | 'reciente' | 'medio' | 'urgente'
+  filtroContacto  = 'todos';
   filtroPrioridad = 'todos';
+  miCartera       = true;
 
+  // Vista
+  modoVista: 'lista' | 'nuevo' = 'lista';
+
+  // Card state
+  expandidoId:     string | null = null;
+  reminderAbierto: string | null = null;
+  secciones: Record<string, Record<SeccionKey, boolean>> = {};
+
+  // Registro de contacto por tarjeta
+  regMedio:   Record<string, MedioContacto | null> = {};
+  regResumen: Record<string, string>               = {};
+
+  // Stats
   stats: ReturnType<ProductoresService['getStats']> | null = null;
-
-  // Registro contacto inline
-  contactoResumen = '';
-  contactoMedio: MedioContacto = 'telefono';
 
   // Nuevo productor
   nuevo: Partial<Productor> = {};
@@ -47,19 +58,19 @@ export class ProductoresComponent implements OnInit {
   ];
 
   readonly estados: { valor: EstadoProductor; label: string }[] = [
-    { valor: 'activo',     label: 'Activo'     },
-    { valor: 'potencial',  label: 'Potencial'  },
-    { valor: 'inactivo',   label: 'Inactivo'   },
-    { valor: 'perdido',    label: 'Perdido'    },
+    { valor: 'activo',    label: 'Activo'    },
+    { valor: 'potencial', label: 'Potencial' },
+    { valor: 'inactivo',  label: 'Inactivo'  },
+    { valor: 'perdido',   label: 'Perdido'   },
   ];
 
   readonly mediosContacto: { valor: MedioContacto; label: string; icon: string }[] = [
-    { valor: 'telefono', label: 'Teléfono',  icon: '📞' },
-    { valor: 'whatsapp', label: 'WhatsApp',  icon: '💬' },
-    { valor: 'email',    label: 'Email',     icon: '📧' },
-    { valor: 'visita',   label: 'Visita',    icon: '🤝' },
-    { valor: 'chatbot',  label: 'Chatbot',   icon: '🤖' },
-    { valor: 'feria',    label: 'Feria/Expo',icon: '🏟️' },
+    { valor: 'telefono', label: 'Teléfono',   icon: '📞' },
+    { valor: 'whatsapp', label: 'WhatsApp',   icon: '💬' },
+    { valor: 'email',    label: 'Email',      icon: '📧' },
+    { valor: 'visita',   label: 'Visita',     icon: '🤝' },
+    { valor: 'chatbot',  label: 'Chatbot',    icon: '🤖' },
+    { valor: 'feria',    label: 'Feria/Expo', icon: '🏟️' },
   ];
 
   readonly prioridades: { valor: PrioridadContacto; label: string }[] = [
@@ -69,13 +80,13 @@ export class ProductoresComponent implements OnInit {
   ];
 
   readonly tiposProductor = [
-    { valor: 'criador',          label: 'Criador'          },
-    { valor: 'invernador',       label: 'Invernador'       },
-    { valor: 'engordador',       label: 'Engordador'       },
-    { valor: 'cabana',           label: 'Cabaña'           },
-    { valor: 'frigorifico',      label: 'Frigorífico'      },
-    { valor: 'exportador',       label: 'Exportador'       },
-    { valor: 'productor_mixto',  label: 'Productor mixto'  },
+    { valor: 'criador',         label: 'Criador'         },
+    { valor: 'invernador',      label: 'Invernador'      },
+    { valor: 'engordador',      label: 'Engordador'      },
+    { valor: 'cabana',          label: 'Cabaña'          },
+    { valor: 'frigorifico',     label: 'Frigorífico'     },
+    { valor: 'exportador',      label: 'Exportador'      },
+    { valor: 'productor_mixto', label: 'Productor mixto' },
   ];
 
   readonly tiposGanadoOpts = ['Novillos','Terneros','Vacas','Vacas con cría','Toros','Vaquillonas'];
@@ -84,96 +95,122 @@ export class ProductoresComponent implements OnInit {
 
   constructor(
     private svc: ProductoresService,
-    public auth: AuthService
+    public auth: AuthService,
   ) {}
 
   ngOnInit(): void {
     this.productores = this.svc.getAll();
-    this.stats = this.svc.getStats();
+    this.stats       = this.svc.getStats();
     this.aplicarFiltros();
   }
 
   aplicarFiltros(): void {
-    this.filtrados = this.productores.filter(p => {
-      const q = this.busqueda.toLowerCase();
-      const matchBusq = !q ||
-        p.nombre.toLowerCase().includes(q) ||
-        (p.estancia  ?? '').toLowerCase().includes(q) ||
-        (p.empresa   ?? '').toLowerCase().includes(q) ||
-        p.telefono.includes(q) ||
-        p.departamento.toLowerCase().includes(q) ||
-        p.localidad.toLowerCase().includes(q);
+    let res = [...this.productores];
 
-      const matchCat    = this.filtroCategoria === 'todos' || p.categoria === this.filtroCategoria;
-      const matchEst    = this.filtroEstado    === 'todos' || p.estado    === this.filtroEstado;
-      const matchDpto   = this.filtroDpto      === 'todos' || p.departamento === this.filtroDpto;
-      const matchPrio   = this.filtroPrioridad === 'todos' || p.prioridad === this.filtroPrioridad;
-      const matchCont   = this.filtroContacto  === 'todos' || this.svc.urgenciaContacto(p) === this.filtroContacto;
+    const u = this.auth.getUser();
+    if (this.miCartera && u?.name) {
+      res = res.filter(p => p.agente === u.name);
+    }
 
-      return matchBusq && matchCat && matchEst && matchDpto && matchPrio && matchCont;
-    });
+    const q = this.busqueda.toLowerCase();
+    if (q) res = res.filter(p =>
+      p.nombre.toLowerCase().includes(q) ||
+      (p.estancia ?? '').toLowerCase().includes(q) ||
+      (p.empresa  ?? '').toLowerCase().includes(q) ||
+      p.telefono.includes(q) ||
+      p.departamento.toLowerCase().includes(q) ||
+      p.localidad.toLowerCase().includes(q)
+    );
 
-    // Ordenar: urgentes primero, luego por días sin contactar desc
-    this.filtrados.sort((a, b) => {
-      const priMap = { alta: 0, media: 1, baja: 2 };
+    if (this.filtroCategoria !== 'todos') res = res.filter(p => p.categoria   === this.filtroCategoria);
+    if (this.filtroEstado    !== 'todos') res = res.filter(p => p.estado      === this.filtroEstado);
+    if (this.filtroDpto      !== 'todos') res = res.filter(p => p.departamento === this.filtroDpto);
+    if (this.filtroPrioridad !== 'todos') res = res.filter(p => p.prioridad   === this.filtroPrioridad);
+    if (this.filtroContacto  !== 'todos') res = res.filter(p => this.svc.urgenciaContacto(p) === this.filtroContacto);
+
+    res.sort((a, b) => {
+      const priMap: Record<string, number> = { alta: 0, media: 1, baja: 2 };
       if (priMap[a.prioridad] !== priMap[b.prioridad]) return priMap[a.prioridad] - priMap[b.prioridad];
       return this.svc.diasSinContactar(b) - this.svc.diasSinContactar(a);
     });
+
+    this.filtrados = res;
+    this.urgentes  = res.filter(p => this.svc.urgenciaContacto(p) === 'urgente');
   }
 
-  seleccionar(p: Productor): void {
-    this.seleccionado = p;
-    this.contactoResumen = '';
-    this.contactoMedio   = 'telefono';
-    this.modoVista = 'ficha';
+  toggleCard(p: Productor): void {
+    if (this.expandidoId === p.id) {
+      this.expandidoId = null;
+    } else {
+      this.expandidoId = p.id;
+      if (!this.secciones[p.id]) {
+        this.secciones[p.id] = { contacto: true, perfil: false, historial: false, registrar: false };
+      }
+    }
+    this.reminderAbierto = null;
+  }
+
+  toggleSeccion(id: string, sec: SeccionKey, event: Event): void {
+    event.stopPropagation();
+    if (!this.secciones[id]) {
+      this.secciones[id] = { contacto: false, perfil: false, historial: false, registrar: false };
+    }
+    this.secciones[id][sec] = !this.secciones[id][sec];
+  }
+
+  toggleReminder(id: string, event: Event): void {
+    event.stopPropagation();
+    this.reminderAbierto = this.reminderAbierto === id ? null : id;
+  }
+
+  registrarContactoInline(p: Productor, event: Event): void {
+    event.stopPropagation();
+    const medio = this.regMedio[p.id];
+    if (!medio) return;
+    this.svc.registrarContacto(p.id, medio, this.regResumen[p.id] ?? '', this.auth.getUser()?.name ?? '');
+    this.regMedio[p.id]   = null;
+    this.regResumen[p.id] = '';
+    this.productores = this.svc.getAll();
+    this.stats       = this.svc.getStats();
+    this.aplicarFiltros();
   }
 
   abrirNuevo(): void {
     this.nuevo = {
       categoria: 'vendedor', tipo: 'criador', estado: 'activo', prioridad: 'media',
       ultimoMedioContacto: 'telefono', historialContactos: [],
-      fechaAlta: new Date().toISOString().split('T')[0],
+      fechaAlta:           new Date().toISOString().split('T')[0],
       ultimaFechaContacto: new Date().toISOString().split('T')[0],
       tiposGanado: [], razasPreferidas: [],
-      agente: this.auth.getUser()?.name ?? '', agenteAvatar: this.auth.getUser()?.avatar ?? '',
+      agente:       this.auth.getUser()?.name   ?? '',
+      agenteAvatar: this.auth.getUser()?.avatar ?? '',
     };
     this.formGuardado = false;
-    this.modoVista = 'nuevo';
+    this.modoVista    = 'nuevo';
   }
 
   guardarNuevo(): void {
+    if (!this.nuevo.nombre || !this.nuevo.telefono || !this.nuevo.departamento) return;
     const p = { ...this.nuevo, id: this.svc.nextId() } as Productor;
     this.svc.add(p);
     this.productores = this.svc.getAll();
-    this.stats = this.svc.getStats();
+    this.stats       = this.svc.getStats();
     this.aplicarFiltros();
     this.formGuardado = true;
-    setTimeout(() => this.seleccionar(p), 800);
+    setTimeout(() => {
+      this.modoVista   = 'lista';
+      this.expandidoId = p.id;
+    }, 800);
   }
 
-  registrarContacto(): void {
-    if (!this.seleccionado || !this.contactoResumen.trim()) return;
-    this.svc.registrarContacto(
-      this.seleccionado.id,
-      this.contactoMedio,
-      this.contactoResumen,
-      this.auth.getUser()?.name ?? ''
-    );
-    this.productores = this.svc.getAll();
-    this.stats = this.svc.getStats();
-    this.aplicarFiltros();
-    this.seleccionado = this.svc.getById(this.seleccionado.id) ?? null;
-    this.contactoResumen = '';
-  }
-
-  dias(p: Productor): number { return this.svc.diasSinContactar(p); }
+  dias(p: Productor): number     { return this.svc.diasSinContactar(p); }
   urgencia(p: Productor): string { return this.svc.urgenciaContacto(p); }
 
-  categoriaLabel(c: string): string  { return this.categorias.find(x => x.valor === c)?.label  ?? c; }
-  estadoLabel(e: string): string      { return this.estados.find(x => x.valor === e)?.label    ?? e; }
-  tipoLabel(t: string): string        { return this.tiposProductor.find(x => x.valor === t)?.label ?? t; }
-  medioIcon(m: string): string        { return this.mediosContacto.find(x => x.valor === m)?.icon ?? '📞'; }
-  medioLabel(m: string): string       { return this.mediosContacto.find(x => x.valor === m)?.label ?? m; }
+  categoriaLabel(c: string): string { return this.categorias.find(x => x.valor === c)?.label     ?? c; }
+  estadoLabel(e: string): string    { return this.estados.find(x => x.valor === e)?.label        ?? e; }
+  tipoLabel(t: string): string      { return this.tiposProductor.find(x => x.valor === t)?.label ?? t; }
+  medioIcon(m: string): string      { return this.mediosContacto.find(x => x.valor === m)?.icon  ?? '📞'; }
+  medioLabel(m: string): string     { return this.mediosContacto.find(x => x.valor === m)?.label ?? m; }
 
   dptos(): string[] {
     return [...new Set(this.productores.map(p => p.departamento))].sort();
