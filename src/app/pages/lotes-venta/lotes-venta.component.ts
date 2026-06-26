@@ -23,12 +23,13 @@ export class LotesVentaComponent implements OnInit {
   loteSeleccionado: LoteVenta | null = null;
   flujoActivo: FlujoChatbotVenta | null = null;
   modoVista: 'lista' | 'ficha' | 'nuevo' = 'lista';
-  sidebarOpen = true;
-  filtroEstado = 'todos';
+  sidebarOpen   = true;
+  filtroEstado  = 'todos';
   filtroDestino = 'todos';
-  busqueda = '';
+  busqueda      = '';
   stats: ReturnType<LotesVentaService['getStats']> | null = null;
-  formGuardado = false;
+  formGuardado  = false;
+  detallesAbiertos = false;
 
   nuevoLote: Partial<LoteVenta> & { comprador: Partial<Comprador> } = {
     comprador: { nombre: '', celular: '', tipo: 'productor' },
@@ -43,19 +44,19 @@ export class LotesVentaComponent implements OnInit {
     { valor: 'cancelado',   label: 'Cancelado'   },
   ];
 
-  readonly destinos: { valor: DestinoGanado; label: string }[] = [
-    { valor: 'faena',       label: 'Faena'          },
-    { valor: 'recria',      label: 'Recría'         },
-    { valor: 'invernada',   label: 'Invernada'      },
-    { valor: 'exportacion', label: 'Exportación'    },
-    { valor: 'reproduccion',label: 'Reproducción'   },
+  readonly destinos: { valor: DestinoGanado; label: string; icon: string }[] = [
+    { valor: 'faena',        label: 'Faena',        icon: '🏭' },
+    { valor: 'recria',       label: 'Recría',        icon: '🌿' },
+    { valor: 'invernada',    label: 'Invernada',     icon: '🌾' },
+    { valor: 'exportacion',  label: 'Exportación',   icon: '🚢' },
+    { valor: 'reproduccion', label: 'Reproducción',  icon: '🐄' },
   ];
 
   readonly formasPago: { valor: FormaPago; label: string }[] = [
-    { valor: 'contado',   label: 'Contado'      },
-    { valor: 'plazo_30',  label: 'Plazo 30 días' },
-    { valor: 'plazo_60',  label: 'Plazo 60 días' },
-    { valor: 'financiado',label: 'Financiado'   },
+    { valor: 'contado',    label: 'Contado'       },
+    { valor: 'plazo_30',   label: 'Plazo 30 días' },
+    { valor: 'plazo_60',   label: 'Plazo 60 días' },
+    { valor: 'financiado', label: 'Financiado'    },
   ];
 
   readonly condicionesEntrega: { valor: CondicionEntrega; label: string }[] = [
@@ -65,20 +66,20 @@ export class LotesVentaComponent implements OnInit {
   ];
 
   readonly tiposComprador = [
-    { valor: 'frigorifico', label: 'Frigorífico'  },
-    { valor: 'exportador',  label: 'Exportador'   },
-    { valor: 'invernada',   label: 'Invernada'    },
-    { valor: 'productor',   label: 'Productor'    },
-    { valor: 'cabana',      label: 'Cabaña'       },
+    { valor: 'frigorifico', label: 'Frigorífico' },
+    { valor: 'exportador',  label: 'Exportador'  },
+    { valor: 'invernada',   label: 'Invernada'   },
+    { valor: 'productor',   label: 'Productor'   },
+    { valor: 'cabana',      label: 'Cabaña'      },
   ];
 
-  readonly tiposGanado     = ['Novillos', 'Terneros', 'Vacas', 'Vacas con cría', 'Toros', 'Vaquillonas'];
-  readonly razas            = ['Hereford', 'Aberdeen Angus', 'Hereford x Aberdeen', 'Criolla', 'Shorthorn', 'Limousin'];
-  readonly departamentos    = ['Artigas','Canelones','Cerro Largo','Colonia','Durazno','Flores','Florida','Lavalleja','Maldonado','Montevideo','Paysandú','Río Negro','Rivera','Rocha','Salto','San José','Soriano','Tacuarembó','Treinta y Tres'];
+  readonly tiposGanado  = ['Novillos','Terneros','Vacas','Vacas con cría','Toros','Vaquillonas'];
+  readonly razas        = ['Hereford','Aberdeen Angus','Hereford x Aberdeen','Criolla','Shorthorn','Limousin'];
+  readonly departamentos = ['Artigas','Canelones','Cerro Largo','Colonia','Durazno','Flores','Florida','Lavalleja','Maldonado','Montevideo','Paysandú','Río Negro','Rivera','Rocha','Salto','San José','Soriano','Tacuarembó','Treinta y Tres'];
 
   constructor(
     private ventaService: LotesVentaService,
-    public auth: AuthService
+    public auth: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -97,7 +98,8 @@ export class LotesVentaComponent implements OnInit {
         l.comprador.nombre.toLowerCase().includes(q) ||
         (l.comprador.empresa ?? '').toLowerCase().includes(q) ||
         l.descripcion.toLowerCase().includes(q) ||
-        l.tipoGanado.toLowerCase().includes(q);
+        l.tipoGanado.toLowerCase().includes(q) ||
+        l.departamento.toLowerCase().includes(q);
       return matchEstado && matchDestino && matchBusq;
     });
   }
@@ -114,11 +116,12 @@ export class LotesVentaComponent implements OnInit {
       flujosChatbot: [],
       origen: 'manual',
       estado: 'disponible',
-      fechaCreacion: new Date().toISOString().split('T')[0],
+      fechaCreacion:      new Date().toISOString().split('T')[0],
       fechaActualizacion: new Date().toISOString().split('T')[0],
-      agente: this.auth.getUser()?.name ?? '',
+      agente:       this.auth.getUser()?.name   ?? '',
       agenteAvatar: this.auth.getUser()?.avatar ?? '',
     };
+    this.detallesAbiertos = false;
     this.formGuardado = false;
     this.modoVista = 'nuevo';
   }
@@ -130,7 +133,7 @@ export class LotesVentaComponent implements OnInit {
     this.stats  = this.ventaService.getStats();
     this.aplicarFiltros();
     this.formGuardado = true;
-    setTimeout(() => { this.seleccionarLote(lote); }, 800);
+    setTimeout(() => this.seleccionarLote(lote), 800);
   }
 
   cambiarEstado(id: string, estado: EstadoLoteVenta): void {
@@ -145,7 +148,8 @@ export class LotesVentaComponent implements OnInit {
 
   setFlujoActivo(flujo: FlujoChatbotVenta): void { this.flujoActivo = flujo; }
 
-  valorVenta(l: LoteVenta): number  { return l.cantidadCabezas * l.precioUnitario; }
+  valorVenta(l: LoteVenta): number { return l.cantidadCabezas * l.precioUnitario; }
+
   margenUnitario(l: LoteVenta): number | null {
     return l.costoUnitario != null ? l.precioUnitario - l.costoUnitario : null;
   }
@@ -153,14 +157,15 @@ export class LotesVentaComponent implements OnInit {
     const m = this.margenUnitario(l);
     return m != null ? m * l.cantidadCabezas : null;
   }
-  comisionTotal(l: LoteVenta): number | null {
-    return l.comisionPct != null ? this.valorVenta(l) * (l.comisionPct / 100) : null;
-  }
   margenPct(l: LoteVenta): number | null {
     if (l.costoUnitario == null) return null;
     return Math.round(((l.precioUnitario - l.costoUnitario) / l.costoUnitario) * 100);
   }
+  comisionTotal(l: LoteVenta): number | null {
+    return l.comisionPct != null ? this.valorVenta(l) * (l.comisionPct / 100) : null;
+  }
 
+  destinoIcon(d: string): string  { return this.destinos.find(x => x.valor === d)?.icon ?? '📦'; }
   estadoLabel(e: string): string  { return this.estados.find(x => x.valor === e)?.label ?? e; }
   destinoLabel(d: string): string { return this.destinos.find(x => x.valor === d)?.label ?? d; }
   pagoLabel(p: string): string    { return this.formasPago.find(x => x.valor === p)?.label ?? p; }
