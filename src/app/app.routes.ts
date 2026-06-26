@@ -16,5 +16,69 @@ export const routes: Routes = [
         (m) => m.DashboardComponent
       ),
   },
-  { path: '**', redirectTo: 'dashboard' },
+  {
+    path: 'estadisticas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/estadisticas/estadisticas.component').then(
+        (m) => m.EstadisticasComponent
+      ),
+  },
+  {
+    path: 'lotes-compra',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes-compra/lotes-compra.component').then(
+        (m) => m.LotesCompraComponent
+      ),
+  },
+  {
+    path: 'lotes-venta',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/lotes-venta/lotes-venta.component').then(
+        (m) => m.LotesVentaComponent
+      ),
+  },
+  {
+    path: 'productores',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/productores/productores.component').then(
+        (m) => m.ProductoresComponent
+      ),
+  },
+  {
+    path: 'visualizador',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/visualizador-lotes/visualizador-lotes.component').then(
+        (m) => m.VisualizadorLotesComponent
+      ),
+  },
+  {
+    path: 'matches',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/matches/matches.component').then(
+        (m) => m.MatchesComponent
+      ),
+  },
+  {
+    path: 'comerciales',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/comerciales/comerciales.component').then(
+        (m) => m.ComercialComponent
+      ),
+  },
+  {
+    path: 'auditoria',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/auditoria/auditoria.component').then(
+        (m) => m.AuditoriaComponent
+      ),
+  },
+{ path: '**', redirectTo: 'dashboard' },
 ];

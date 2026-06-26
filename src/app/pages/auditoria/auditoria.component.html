@@ -1,0 +1,125 @@
+<div class="crm-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <app-sidebar [open]="sidebarOpen" />
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="breadcrumb">
+        <span class="bc-title">Auditoría</span>
+        <span class="bc-sub">— Registro de cambios del sistema</span>
+      </div>
+      <div class="topbar-right">
+        <span class="total-badge">{{ filtrados.length }} registros</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- KPIs -->
+      <div class="kpi-row" *ngIf="stats">
+        <div class="mini-kpi"><span class="mk-val">{{ stats.total }}</span><span class="mk-lbl">Total cambios</span></div>
+        <div class="mini-kpi hoy"><span class="mk-val">{{ stats.hoy }}</span><span class="mk-lbl">Hoy</span></div>
+        <div class="mini-kpi crear"><span class="mk-val">{{ stats.creaciones }}</span><span class="mk-lbl">Creaciones</span></div>
+        <div class="mini-kpi editar"><span class="mk-val">{{ stats.ediciones }}</span><span class="mk-lbl">Ediciones</span></div>
+        <div class="mini-kpi eliminar"><span class="mk-val">{{ stats.eliminaciones }}</span><span class="mk-lbl">Eliminaciones</span></div>
+      </div>
+
+      <!-- FILTROS -->
+      <div class="filtros-panel">
+        <div class="filtros-row">
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Buscar por usuario, descripción o entidad..."
+            [(ngModel)]="busqueda"
+            (ngModelChange)="aplicarFiltros()"
+          />
+
+          <select class="select-filtro" [(ngModel)]="filtroUsuario" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todos los usuarios</option>
+            <option *ngFor="let u of usuarios" [value]="u.username">{{ u.nombre }}</option>
+          </select>
+
+          <select class="select-filtro" [(ngModel)]="filtroEntidad" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todas las entidades</option>
+            <option *ngFor="let e of entidades" [value]="e">{{ e }}</option>
+          </select>
+
+          <select class="select-filtro" [(ngModel)]="filtroAccion" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todas las acciones</option>
+            <option *ngFor="let a of acciones" [value]="a.valor">{{ a.label }}</option>
+          </select>
+        </div>
+
+        <div class="filtros-row filtros-fecha">
+          <label class="fecha-label">Desde:</label>
+          <input class="input-fecha" type="date" [(ngModel)]="filtroFechaDesde" (ngModelChange)="aplicarFiltros()" />
+          <label class="fecha-label">Hasta:</label>
+          <input class="input-fecha" type="date" [(ngModel)]="filtroFechaHasta" (ngModelChange)="aplicarFiltros()" />
+          <button class="btn-limpiar" (click)="limpiarFiltros()">✕ Limpiar filtros</button>
+        </div>
+      </div>
+
+      <!-- TABLA -->
+      <div class="tabla-wrapper">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Fecha y hora</th>
+              <th>Usuario</th>
+              <th>Entidad</th>
+              <th>Acción</th>
+              <th>Descripción</th>
+              <th>Valor anterior</th>
+              <th>Valor nuevo</th>
+              <th>IP / Dispositivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of filtrados" class="audit-row">
+              <td class="td-fecha">
+                <span class="fecha">{{ log.fecha | date:'dd/MM/yyyy' }}</span>
+                <span class="hora">{{ log.fecha | date:'HH:mm:ss' }}</span>
+              </td>
+              <td class="td-usuario">
+                <span class="avatar-sm">{{ log.usuarioNombre | slice:0:2 | uppercase }}</span>
+                <span class="nombre-usuario">{{ log.usuarioNombre }}</span>
+              </td>
+              <td>
+                <span class="entidad-badge">{{ log.entidad }}</span>
+                <span class="entidad-id" *ngIf="log.entidadId">#{{ log.entidadId }}</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="badgeClass(log.accion)">
+                  {{ iconAccion(log.accion) }} {{ log.accion }}
+                </span>
+              </td>
+              <td class="td-desc">{{ log.descripcion }}</td>
+              <td class="td-valor anterior">
+                <span *ngIf="log.valorAnterior" class="valor-chip anterior">{{ log.valorAnterior }}</span>
+                <span *ngIf="!log.valorAnterior" class="sin-valor">—</span>
+              </td>
+              <td class="td-valor nuevo">
+                <span *ngIf="log.valorNuevo" class="valor-chip nuevo">{{ log.valorNuevo }}</span>
+                <span *ngIf="!log.valorNuevo" class="sin-valor">—</span>
+              </td>
+              <td class="td-device">
+                <span class="ip">{{ log.ip }}</span>
+                <span class="device">{{ log.dispositivo }}</span>
+              </td>
+            </tr>
+            <tr *ngIf="filtrados.length === 0">
+              <td colspan="8" class="empty-state">No hay registros que coincidan con los filtros aplicados.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>

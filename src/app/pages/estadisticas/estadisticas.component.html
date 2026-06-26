@@ -1,0 +1,338 @@
+<div class="crm-layout">
+  <!-- SIDEBAR -->
+  <app-sidebar [open]="sidebarOpen" />
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="page-title"><h2>Estadísticas</h2></div>
+      <div class="topbar-right"><span class="fecha">Noviembre 2024</span></div>
+    </header>
+
+<div class="stats-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>Panel de Estadísticas</h1>
+      <p>Resumen operativo del CRM y actividad del chatbot — Noviembre 2024</p>
+    </div>
+    <div class="header-badge">
+      <span class="live-dot"></span> Datos en tiempo real
+    </div>
+  </div>
+
+  <!-- ── BLOQUE 1: LOTES Y PRODUCTORES ── -->
+  <section class="stats-section">
+    <h2 class="section-title">📦 Lotes y Productores</h2>
+    <div class="cards-row">
+
+      <!-- Lotes de Compra -->
+      <div class="stat-card accent-green">
+        <div class="card-top">
+          <div class="card-icon">🛒</div>
+          <span class="variacion" [class]="tendenciaClass(lotesCompra.variacionMensual)">
+            {{ tendenciaIcon(lotesCompra.variacionMensual) }} {{ lotesCompra.variacionMensual | number:'1.0-0' }}%
+          </span>
+        </div>
+        <div class="card-main">
+          <span class="card-value">{{ lotesCompra.total }}</span>
+          <span class="card-label">Lotes de Compra</span>
+        </div>
+        <div class="card-sub-grid">
+          <div class="sub-item"><span class="sub-num">{{ lotesCompra.totalCabezas | number }}</span><span class="sub-lbl">Cabezas</span></div>
+          <div class="sub-item"><span class="sub-num">${{ lotesCompra.valorTotal | number }}</span><span class="sub-lbl">Valor total</span></div>
+          <div class="sub-item"><span class="sub-num">{{ lotesCompra.cerradosEsteMes }}</span><span class="sub-lbl">Cerrados mes</span></div>
+          <div class="sub-item"><span class="sub-num">{{ lotesCompra.enProceso }}</span><span class="sub-lbl">En proceso</span></div>
+        </div>
+        <div class="estado-bar">
+          <div class="bar-seg disponible" [style.width]="barWidth(lotesCompra.disponibles, lotesCompra.total)" title="Disponibles"></div>
+          <div class="bar-seg en_proceso" [style.width]="barWidth(lotesCompra.enProceso, lotesCompra.total)" title="En proceso"></div>
+          <div class="bar-seg cerrado"    [style.width]="barWidth(lotesCompra.cerradosEsteMes, lotesCompra.total)" title="Cerrados"></div>
+        </div>
+        <div class="bar-legend">
+          <span class="leg-item"><i class="disponible"></i>Disponibles ({{ lotesCompra.disponibles }})</span>
+          <span class="leg-item"><i class="en_proceso"></i>En proceso ({{ lotesCompra.enProceso }})</span>
+          <span class="leg-item"><i class="cerrado"></i>Cerrados ({{ lotesCompra.cerradosEsteMes }})</span>
+        </div>
+      </div>
+
+      <!-- Lotes de Venta -->
+      <div class="stat-card accent-blue">
+        <div class="card-top">
+          <div class="card-icon">💰</div>
+          <span class="variacion" [class]="tendenciaClass(lotesVenta.variacionMensual)">
+            {{ tendenciaIcon(lotesVenta.variacionMensual) }} {{ lotesVenta.variacionMensual | number:'1.0-0' }}%
+          </span>
+        </div>
+        <div class="card-main">
+          <span class="card-value">{{ lotesVenta.total }}</span>
+          <span class="card-label">Lotes de Venta</span>
+        </div>
+        <div class="card-sub-grid">
+          <div class="sub-item"><span class="sub-num">{{ lotesVenta.totalCabezas | number }}</span><span class="sub-lbl">Cabezas</span></div>
+          <div class="sub-item"><span class="sub-num">${{ lotesVenta.valorTotal | number }}</span><span class="sub-lbl">Valor total</span></div>
+          <div class="sub-item"><span class="sub-num">{{ lotesVenta.cerradosEsteMes }}</span><span class="sub-lbl">Cerrados mes</span></div>
+          <div class="sub-item"><span class="sub-num">{{ lotesVenta.enProceso }}</span><span class="sub-lbl">En proceso</span></div>
+        </div>
+        <div class="estado-bar">
+          <div class="bar-seg disponible" [style.width]="barWidth(lotesVenta.disponibles, lotesVenta.total)" title="Disponibles"></div>
+          <div class="bar-seg en_proceso" [style.width]="barWidth(lotesVenta.enProceso, lotesVenta.total)" title="En proceso"></div>
+          <div class="bar-seg cerrado"    [style.width]="barWidth(lotesVenta.cerradosEsteMes, lotesVenta.total)" title="Cerrados"></div>
+        </div>
+        <div class="bar-legend">
+          <span class="leg-item"><i class="disponible"></i>Disponibles ({{ lotesVenta.disponibles }})</span>
+          <span class="leg-item"><i class="en_proceso"></i>En proceso ({{ lotesVenta.enProceso }})</span>
+          <span class="leg-item"><i class="cerrado"></i>Cerrados ({{ lotesVenta.cerradosEsteMes }})</span>
+        </div>
+      </div>
+
+      <!-- Productores -->
+      <div class="stat-card accent-amber">
+        <div class="card-top">
+          <div class="card-icon">👨‍🌾</div>
+          <span class="variacion" [class]="tendenciaClass(productores.variacionMensual)">
+            {{ tendenciaIcon(productores.variacionMensual) }} {{ productores.variacionMensual }}%
+          </span>
+        </div>
+        <div class="card-main">
+          <span class="card-value">{{ productores.total }}</span>
+          <span class="card-label">Productores cargados</span>
+        </div>
+        <div class="card-sub-grid">
+          <div class="sub-item"><span class="sub-num">{{ productores.activos }}</span><span class="sub-lbl">Activos</span></div>
+          <div class="sub-item"><span class="sub-num">{{ productores.nuevosEsteMes }}</span><span class="sub-lbl">Nuevos mes</span></div>
+          <div class="sub-item"><span class="sub-num">{{ productores.conLotesActivos }}</span><span class="sub-lbl">Con lotes activos</span></div>
+          <div class="sub-item"><span class="sub-num">{{ productores.total - productores.activos }}</span><span class="sub-lbl">Inactivos</span></div>
+        </div>
+        <div class="donut-wrapper">
+          <svg viewBox="0 0 80 80" class="donut">
+            <circle cx="40" cy="40" r="30" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+            <circle cx="40" cy="40" r="30" fill="none" stroke="#d97706" stroke-width="10"
+              [attr.stroke-dasharray]="((productores.activos / productores.total * 188.5) | number:'1.1-1') + ' 188.5'"
+              stroke-dashoffset="47" stroke-linecap="round"/>
+          </svg>
+          <div class="donut-label">
+            <span class="donut-pct">{{ (productores.activos / productores.total * 100) | number:'1.0-0' }}%</span>
+            <span class="donut-sub">activos</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── BLOQUE 2: RANKING DE AGENTES ── -->
+  <section class="stats-section">
+    <h2 class="section-title">🏆 Rendimiento de Agentes</h2>
+    <div class="agents-grid">
+
+      <!-- Top cierres -->
+      <div class="agent-panel">
+        <div class="panel-header">
+          <span class="panel-icon">🥇</span>
+          <div>
+            <h3>Más comercializaciones cerradas</h3>
+            <p>Ranking por operaciones concluidas</p>
+          </div>
+        </div>
+        <div class="agent-list">
+          <div class="agent-row" *ngFor="let a of agentes; let i = index"
+               [class.top1]="i === 0" [class.top2]="i === 1" [class.top3]="i === 2">
+            <span class="rank">{{ i + 1 }}</span>
+            <div class="agent-avatar">{{ a.avatar }}</div>
+            <div class="agent-info">
+              <span class="agent-name">{{ a.nombre }}</span>
+              <div class="agent-bar-wrap">
+                <div class="agent-bar green" [style.width]="barWidth(a.comercializaciones, maxCierres)"></div>
+              </div>
+            </div>
+            <div class="agent-stats">
+              <span class="stat-big">{{ a.comercializaciones }}</span>
+              <span class="stat-sm">operaciones</span>
+              <span class="stat-monto">${{ a.montoTotal | number }}</span>
+              <span class="stat-tasa">{{ a.tasaCierre }}% cierre</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top chatbot -->
+      <div class="agent-panel">
+        <div class="panel-header">
+          <span class="panel-icon">🤖</span>
+          <div>
+            <h3>Mayor uso del chatbot</h3>
+            <p>Ranking por interacciones con la herramienta</p>
+          </div>
+        </div>
+        <div class="agent-list">
+          <div class="agent-row"
+               *ngFor="let a of (agentes | slice:0:5 | slice:0:(agentes.length)); let i = index"
+               [class.top1]="agenteTopChatbot.id === a.id && i === 0"
+               [class.top2]="i === 1" [class.top3]="i === 2">
+            <span class="rank">{{ i + 1 }}</span>
+            <div class="agent-avatar">{{ a.avatar }}</div>
+            <div class="agent-info">
+              <span class="agent-name">{{ a.nombre }}</span>
+              <div class="agent-bar-wrap">
+                <div class="agent-bar purple" [style.width]="barWidth(a.interaccionesChatbot, maxChatInteracciones)"></div>
+              </div>
+            </div>
+            <div class="agent-stats">
+              <span class="stat-big">{{ a.interaccionesChatbot }}</span>
+              <span class="stat-sm">mensajes</span>
+              <span class="stat-monto">{{ a.sesionesChat }} sesiones</span>
+              <span class="stat-tasa">~{{ a.tiempoPromedioRespuesta }}min resp.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tabla detalle agentes -->
+    <div class="detail-table-wrap">
+      <h3 class="sub-title">Detalle completo por agente</h3>
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Agente</th>
+            <th>Comercializaciones</th>
+            <th>Monto total</th>
+            <th>Tasa de cierre</th>
+            <th>Interacciones chat</th>
+            <th>Sesiones</th>
+            <th>T. resp. prom.</th>
+            <th>Consultas pend.</th>
+            <th>Última actividad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of agentes">
+            <td>
+              <div class="td-agent">
+                <div class="sm-avatar">{{ a.avatar }}</div>
+                <span>{{ a.nombre }}</span>
+              </div>
+            </td>
+            <td><strong>{{ a.comercializaciones }}</strong></td>
+            <td>${{ a.montoTotal | number }}</td>
+            <td>
+              <span class="pct-badge" [class.high]="a.tasaCierre >= 70" [class.med]="a.tasaCierre >= 60 && a.tasaCierre < 70" [class.low]="a.tasaCierre < 60">
+                {{ a.tasaCierre }}%
+              </span>
+            </td>
+            <td>{{ a.interaccionesChatbot }}</td>
+            <td>{{ a.sesionesChat }}</td>
+            <td>{{ a.tiempoPromedioRespuesta }} min</td>
+            <td>
+              <span class="pending-badge" [class.has]="a.consultasPendientes > 0">
+                {{ a.consultasPendientes }}
+              </span>
+            </td>
+            <td>{{ a.ultimaActividad }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── BLOQUE 3: CHATBOT ── -->
+  <section class="stats-section">
+    <h2 class="section-title">🤖 Métricas del Chatbot</h2>
+
+    <!-- KPIs chatbot -->
+    <div class="chat-kpis">
+      <div class="chat-kpi">
+        <span class="ck-icon">💬</span>
+        <span class="ck-value">{{ chatbot.totalConversaciones | number }}</span>
+        <span class="ck-label">Total conversaciones</span>
+      </div>
+      <div class="chat-kpi active">
+        <span class="ck-icon">🟢</span>
+        <span class="ck-value">{{ chatbot.conversacionesActivas }}</span>
+        <span class="ck-label">Activas ahora</span>
+      </div>
+      <div class="chat-kpi">
+        <span class="ck-icon">📨</span>
+        <span class="ck-value">{{ chatbot.mensajesTotales | number }}</span>
+        <span class="ck-label">Mensajes totales</span>
+      </div>
+      <div class="chat-kpi">
+        <span class="ck-icon">⏱️</span>
+        <span class="ck-value">{{ chatbot.tiempoPromedioSesion }} min</span>
+        <span class="ck-label">Duración promedio</span>
+      </div>
+      <div class="chat-kpi highlight">
+        <span class="ck-icon">🎯</span>
+        <span class="ck-value">{{ chatbot.tasaConversionACierre }}%</span>
+        <span class="ck-label">Conversación → Cierre</span>
+      </div>
+    </div>
+
+    <div class="chat-bottom-grid">
+
+      <!-- Temas frecuentes -->
+      <div class="chat-panel">
+        <h3>Consultas más frecuentes</h3>
+        <div class="topic-list">
+          <div class="topic-row" *ngFor="let t of chatbot.consultasMasFrecuentes">
+            <div class="topic-meta">
+              <span class="topic-name">{{ t.tema }}</span>
+              <span class="topic-count">{{ t.cantidad }}</span>
+            </div>
+            <div class="topic-bar-bg">
+              <div class="topic-bar" [style.width]="t.porcentaje + '%'"></div>
+            </div>
+            <span class="topic-pct">{{ t.porcentaje }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actividad por hora -->
+      <div class="chat-panel">
+        <h3>Actividad por hora del día</h3>
+        <div class="hour-chart">
+          <div class="hour-col" *ngFor="let h of chatbot.actividadPorHora">
+            <div class="hour-bar-wrap">
+              <div class="hour-bar" [style.height]="barWidth(h.sesiones, maxBarHora)"
+                   [title]="h.sesiones + ' sesiones'"></div>
+            </div>
+            <span class="hour-label">{{ h.hora }}</span>
+          </div>
+        </div>
+        <p class="chart-note">Pico de actividad: 15h — 118 sesiones</p>
+      </div>
+
+      <!-- Tendencia semanal -->
+      <div class="chat-panel wide">
+        <h3>Tendencia semanal</h3>
+        <div class="week-chart">
+          <div class="week-col" *ngFor="let d of chatbot.tendenciaSemanal">
+            <div class="week-bars">
+              <div class="week-bar conv" [style.height]="barWidth(d.conversaciones, 100)"
+                   [title]="d.conversaciones + ' conversaciones'"></div>
+              <div class="week-bar cierre" [style.height]="barWidth(d.cierres, 100)"
+                   [title]="d.cierres + ' cierres'"></div>
+            </div>
+            <span class="week-label">{{ d.dia }}</span>
+            <div class="week-nums">
+              <span class="wn conv">{{ d.conversaciones }}</span>
+              <span class="wn cierre">{{ d.cierres }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="week-legend">
+          <span><i class="leg-conv"></i> Conversaciones</span>
+          <span><i class="leg-cierre"></i> Cierres</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- end stats-page -->
+  </main>
+</div><!-- end crm-layout -->

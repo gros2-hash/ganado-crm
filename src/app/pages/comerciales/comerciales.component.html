@@ -1,0 +1,181 @@
+<div class="crm-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <app-sidebar [open]="sidebarOpen" />
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="breadcrumb">
+        <span class="bc-title">Comerciales</span>
+        <span class="bc-sub">— Rendimiento y oportunidades</span>
+      </div>
+      <div class="topbar-right">
+        <span class="total-badge">{{ filtradas.length }} comerciales</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- KPIs GLOBALES -->
+      <div class="kpi-row" *ngIf="resumen">
+        <div class="mini-kpi"><span class="mk-val">{{ resumen.total }}</span><span class="mk-lbl">Total</span></div>
+        <div class="mini-kpi activo"><span class="mk-val">{{ resumen.activos }}</span><span class="mk-lbl">Activos</span></div>
+        <div class="mini-kpi inactivo"><span class="mk-val">{{ resumen.inactivos }}</span><span class="mk-lbl">Inactivos</span></div>
+      </div>
+
+      <!-- FILTROS -->
+      <div class="filtros-bar">
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Buscar por nombre, zona o email..."
+          [(ngModel)]="busqueda"
+          (ngModelChange)="aplicarFiltros()"
+        />
+        <select class="select-filtro" [(ngModel)]="filtroZona" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Todas las zonas</option>
+          <option *ngFor="let z of zonas" [value]="z">{{ z }}</option>
+        </select>
+        <select class="select-filtro" [(ngModel)]="filtroRol" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Todos los roles</option>
+          <option *ngFor="let r of roles" [value]="r">{{ r | titlecase }}</option>
+        </select>
+        <select class="select-filtro" [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()">
+          <option value="todos">Activos e inactivos</option>
+          <option value="activo">Solo activos</option>
+          <option value="inactivo">Solo inactivos</option>
+        </select>
+      </div>
+
+      <!-- TARJETAS -->
+      <div class="cards-grid">
+        <div
+          class="comercial-card"
+          *ngFor="let fila of filtradas"
+          [class.inactivo]="!fila.comercial.activo"
+          [class.expandida]="fila.expandido"
+        >
+          <!-- CABECERA DE LA TARJETA -->
+          <div class="card-header" (click)="toggleExpandir(fila)">
+            <div class="card-identity">
+              <div class="avatar-lg" [class.inactivo]="!fila.comercial.activo">
+                {{ fila.comercial.avatar }}
+              </div>
+              <div class="identity-info">
+                <span class="nombre">{{ fila.comercial.nombre }}</span>
+                <div class="badges-row">
+                  <span class="rol-badge {{ fila.comercial.rol }}">{{ fila.comercial.rol | titlecase }}</span>
+                  <span class="zona-badge">📍 {{ fila.comercial.zona }}</span>
+                  <span class="estado-badge" [class.activo]="fila.comercial.activo" [class.inactivo]="!fila.comercial.activo">
+                    {{ fila.comercial.activo ? '● Activo' : '○ Inactivo' }}
+                  </span>
+                </div>
+                <span class="email">{{ fila.comercial.email }}</span>
+              </div>
+            </div>
+
+            <!-- MÉTRICAS PRINCIPALES -->
+            <div class="card-metricas">
+
+              <div class="metrica">
+                <span class="met-icon">⏱️</span>
+                <div class="met-data">
+                  <span class="met-val">{{ formatTiempo(fila.stats.minutosChatbot) }}</span>
+                  <span class="met-lbl">Chatbot · {{ fila.stats.sesiones }} sesiones</span>
+                </div>
+              </div>
+
+              <div class="metrica compra">
+                <span class="met-icon">🛒</span>
+                <div class="met-data">
+                  <span class="met-val">{{ fila.stats.lotesCompraChatbot }}<small>/{{ fila.stats.totalLotesCompra }}</small></span>
+                  <span class="met-lbl">Compras vía chatbot</span>
+                </div>
+              </div>
+
+              <div class="metrica venta">
+                <span class="met-icon">💰</span>
+                <div class="met-data">
+                  <span class="met-val">{{ fila.stats.lotesVentaChatbot }}<small>/{{ fila.stats.totalLotesVenta }}</small></span>
+                  <span class="met-lbl">Ventas vía chatbot</span>
+                </div>
+              </div>
+
+              <div class="metrica match" [class.con-matches]="fila.stats.matches.length > 0">
+                <span class="met-icon">🔗</span>
+                <div class="met-data">
+                  <span class="met-val">
+                    {{ fila.stats.matches.length }}
+                    <small *ngIf="matchesCruzados(fila.stats) > 0" class="cruzado-badge">
+                      {{ matchesCruzados(fila.stats) }} cruzados
+                    </small>
+                  </span>
+                  <span class="met-lbl">Oportunidades activas</span>
+                </div>
+              </div>
+
+            </div>
+
+            <button class="toggle-btn" [class.abierto]="fila.expandido">
+              {{ fila.expandido ? '▲' : '▼' }}
+            </button>
+          </div>
+
+          <!-- DETALLE EXPANDIBLE: MATCHES -->
+          <div class="card-detalle" *ngIf="fila.expandido">
+            <div class="detalle-titulo">Oportunidades de negocio</div>
+
+            <div *ngIf="fila.stats.matches.length === 0" class="sin-matches">
+              No hay lotes de compra activos que coincidan con lotes de venta disponibles.
+            </div>
+
+            <div class="matches-lista" *ngIf="fila.stats.matches.length > 0">
+              <div
+                class="match-row"
+                *ngFor="let m of fila.stats.matches"
+                [class.cruzado]="m.esCruzado"
+              >
+                <div class="match-tipo">
+                  <span class="tipo-ganado">🐄 {{ m.tipoGanado }}</span>
+                  <span class="raza">{{ m.raza }}</span>
+                  <span class="cruzado-tag" *ngIf="m.esCruzado">🔀 Cruzado</span>
+                  <span class="propio-tag" *ngIf="!m.esCruzado">♻️ Propio</span>
+                </div>
+                <div class="match-lotes">
+                  <div class="match-lado compra">
+                    <span class="lado-lbl">COMPRA</span>
+                    <span class="lote-id">{{ m.loteCompraId }}</span>
+                    <span class="cabezas">{{ m.cabezasCompra }} cab.</span>
+                    <span class="comercial-nm">{{ m.comercialCompra }}</span>
+                  </div>
+                  <span class="flecha">⟷</span>
+                  <div class="match-lado venta">
+                    <span class="lado-lbl">VENTA</span>
+                    <span class="lote-id">{{ m.loteVentaId }}</span>
+                    <span class="cabezas">{{ m.cabezasVenta }} cab.</span>
+                    <span class="comercial-nm">{{ m.comercialVenta }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detalle-contacto">
+              <span>📱 {{ fila.comercial.telefono }}</span>
+              <span>✉️ {{ fila.comercial.email }}</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="empty-state" *ngIf="filtradas.length === 0">
+          No hay comerciales que coincidan con los filtros aplicados.
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
