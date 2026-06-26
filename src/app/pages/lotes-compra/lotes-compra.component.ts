@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { LotesCompraService } from '../../services/lotes-compra.service';
-import { LoteCompra, EstadoLote, FlujoChatbot, MensajeChatbot } from '../../models/lote-compra.model';
+import { LoteCompra, EstadoLote, FlujoChatbot, ClaseAnimal, EstadoAnimal } from '../../models/lote-compra.model';
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 
 @Component({
@@ -21,31 +21,33 @@ export class LotesCompraComponent implements OnInit {
   loteSeleccionado: LoteCompra | null = null;
   flujoActivo: FlujoChatbot | null = null;
   modoVista: 'lista' | 'ficha' | 'nuevo' = 'lista';
-  sidebarOpen = true;
+  sidebarOpen  = true;
   filtroEstado = 'todos';
   filtroOrigen = 'todos';
-  busqueda = '';
+  busqueda     = '';
   stats: ReturnType<LotesCompraService['getStats']> | null = null;
 
-  // Formulario nuevo lote
   nuevoLote: Partial<LoteCompra> = {};
   formGuardado = false;
 
-  readonly estados: { valor: EstadoLote; label: string; color: string }[] = [
-    { valor: 'nuevo',       label: 'Nuevo',       color: 'nuevo' },
-    { valor: 'contactado',  label: 'Contactado',  color: 'contactado' },
-    { valor: 'negociacion', label: 'Negociación', color: 'negociacion' },
-    { valor: 'cerrado',     label: 'Cerrado',     color: 'cerrado' },
-    { valor: 'cancelado',   label: 'Cancelado',   color: 'cancelado' },
+  readonly estados: { valor: EstadoLote; label: string }[] = [
+    { valor: 'nuevo',       label: 'Nuevo'       },
+    { valor: 'contactado',  label: 'Contactado'  },
+    { valor: 'negociacion', label: 'Negociación' },
+    { valor: 'cerrado',     label: 'Cerrado'     },
+    { valor: 'cancelado',   label: 'Cancelado'   },
   ];
 
-  readonly tiposGanado = ['Novillos', 'Terneros', 'Vacas', 'Vacas con cría', 'Toros', 'Vaquillonas'];
-  readonly razas = ['Hereford', 'Aberdeen Angus', 'Hereford x Aberdeen', 'Criolla', 'Shorthorn', 'Limousin'];
-  readonly departamentos = ['Artigas','Canelones','Cerro Largo','Colonia','Durazno','Flores','Florida','Lavalleja','Maldonado','Montevideo','Paysandú','Río Negro','Rivera','Rocha','Salto','San José','Soriano','Tacuarembó','Treinta y Tres'];
+  readonly tiposGanado    = ['Novillos','Terneros','Vacas','Vacas con cría','Toros','Vaquillonas'];
+  readonly razas          = ['Hereford','Aberdeen Angus','Hereford x Aberdeen','Criolla','Shorthorn','Limousin'];
+  readonly departamentos  = ['Artigas','Canelones','Cerro Largo','Colonia','Durazno','Flores','Florida','Lavalleja','Maldonado','Montevideo','Paysandú','Río Negro','Rivera','Rocha','Salto','San José','Soriano','Tacuarembó','Treinta y Tres'];
+  readonly clasesAnimal: ClaseAnimal[]   = ['MB','B','BMB','G'];
+  readonly estadosAnimal: EstadoAnimal[] = ['MB','B','BMB','BR'];
+  readonly categorias     = ['Novillo','Vaquillona','Toro','Vaca','Ternero','Ternera','Vacas con cría'];
 
   constructor(
     private lotesService: LotesCompraService,
-    public auth: AuthService
+    public auth: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -63,7 +65,9 @@ export class LotesCompraComponent implements OnInit {
         l.id.toLowerCase().includes(q) ||
         l.cliente.nombre.toLowerCase().includes(q) ||
         l.descripcion.toLowerCase().includes(q) ||
-        l.tipoGanado.toLowerCase().includes(q);
+        l.tipoGanado.toLowerCase().includes(q) ||
+        l.departamento.toLowerCase().includes(q) ||
+        (l.paraje ?? '').toLowerCase().includes(q);
       return matchEstado && matchOrigen && matchBusq;
     });
   }
@@ -80,9 +84,9 @@ export class LotesCompraComponent implements OnInit {
       flujosChatbot: [],
       origen: 'manual',
       estado: 'nuevo',
-      fechaCreacion: new Date().toISOString().split('T')[0],
-      fechaActualizacion: new Date().toISOString().split('T')[0],
-      agente: this.auth.getUser()?.name ?? '',
+      fechaCreacion:       new Date().toISOString().split('T')[0],
+      fechaActualizacion:  new Date().toISOString().split('T')[0],
+      agente:       this.auth.getUser()?.name   ?? '',
       agenteAvatar: this.auth.getUser()?.avatar ?? '',
     };
     this.formGuardado = false;
@@ -90,16 +94,13 @@ export class LotesCompraComponent implements OnInit {
   }
 
   guardarNuevo(): void {
-    const lote = {
-      ...this.nuevoLote,
-      id: this.lotesService.nextId(),
-    } as LoteCompra;
+    const lote = { ...this.nuevoLote, id: this.lotesService.nextId() } as LoteCompra;
     this.lotesService.add(lote);
     this.lotes = this.lotesService.getAll();
     this.stats  = this.lotesService.getStats();
     this.aplicarFiltros();
     this.formGuardado = true;
-    setTimeout(() => { this.seleccionarLote(lote); }, 800);
+    setTimeout(() => this.seleccionarLote(lote), 800);
   }
 
   cambiarEstado(id: string, estado: EstadoLote): void {
@@ -114,7 +115,17 @@ export class LotesCompraComponent implements OnInit {
 
   setFlujoActivo(flujo: FlujoChatbot): void { this.flujoActivo = flujo; }
 
-  valorTotal(l: LoteCompra): number { return l.cantidadCabezas * l.precioUnitario; }
+  valorTotal(l: LoteCompra): number {
+    if (l.pesoPromedio && l.precioMaxKg) return l.cantidadCabezas * l.pesoPromedio * l.precioMaxKg;
+    return l.cantidadCabezas * (l.precioUnitario ?? 0);
+  }
+
+  precioKgLabel(l: LoteCompra): string {
+    if (l.precioMinKg && l.precioMaxKg) return `$${l.precioMinKg} – $${l.precioMaxKg}`;
+    if (l.precioMinKg) return `$${l.precioMinKg}+`;
+    if (l.precioMaxKg) return `≤ $${l.precioMaxKg}`;
+    return '';
+  }
 
   estadoLabel(e: string): string {
     return this.estados.find(x => x.valor === e)?.label ?? e;
