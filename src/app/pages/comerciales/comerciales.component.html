@@ -11,7 +11,7 @@
       <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
       <div class="breadcrumb">
         <span class="bc-title">Comerciales</span>
-        <span class="bc-sub">— Rendimiento y oportunidades</span>
+        <span class="bc-sub">— Equipo y rendimiento</span>
       </div>
       <div class="topbar-right">
         <span class="total-badge">{{ filtradas.length }} comerciales</span>
@@ -22,9 +22,27 @@
 
       <!-- KPIs GLOBALES -->
       <div class="kpi-row" *ngIf="resumen">
-        <div class="mini-kpi"><span class="mk-val">{{ resumen.total }}</span><span class="mk-lbl">Total</span></div>
-        <div class="mini-kpi activo"><span class="mk-val">{{ resumen.activos }}</span><span class="mk-lbl">Activos</span></div>
-        <div class="mini-kpi inactivo"><span class="mk-val">{{ resumen.inactivos }}</span><span class="mk-lbl">Inactivos</span></div>
+        <div class="mini-kpi">
+          <span class="mk-icon">👥</span>
+          <div class="mk-body">
+            <span class="mk-val">{{ resumen.total }}</span>
+            <span class="mk-lbl">Total</span>
+          </div>
+        </div>
+        <div class="mini-kpi activo">
+          <span class="mk-icon">●</span>
+          <div class="mk-body">
+            <span class="mk-val">{{ resumen.activos }}</span>
+            <span class="mk-lbl">Activos</span>
+          </div>
+        </div>
+        <div class="mini-kpi inactivo">
+          <span class="mk-icon">○</span>
+          <div class="mk-body">
+            <span class="mk-val">{{ resumen.inactivos }}</span>
+            <span class="mk-lbl">Inactivos</span>
+          </div>
+        </div>
       </div>
 
       <!-- FILTROS -->
@@ -114,7 +132,7 @@
                       {{ matchesCruzados(fila.stats) }} cruzados
                     </small>
                   </span>
-                  <span class="met-lbl">Oportunidades activas</span>
+                  <span class="met-lbl">Matches activos</span>
                 </div>
               </div>
 
@@ -127,10 +145,13 @@
 
           <!-- DETALLE EXPANDIBLE: MATCHES -->
           <div class="card-detalle" *ngIf="fila.expandido">
-            <div class="detalle-titulo">Oportunidades de negocio</div>
+            <div class="detalle-header">
+              <span class="detalle-titulo">Matches</span>
+              <span class="detalle-count" *ngIf="fila.stats.matches.length > 0">{{ fila.stats.matches.length }} activos</span>
+            </div>
 
             <div *ngIf="fila.stats.matches.length === 0" class="sin-matches">
-              No hay lotes de compra activos que coincidan con lotes de venta disponibles.
+              Sin matches activos para este comercial.
             </div>
 
             <div class="matches-lista" *ngIf="fila.stats.matches.length > 0">
@@ -139,11 +160,11 @@
                 *ngFor="let m of fila.stats.matches"
                 [class.cruzado]="m.esCruzado"
               >
-                <div class="match-tipo">
+                <div class="match-meta">
                   <span class="tipo-ganado">🐄 {{ m.tipoGanado }}</span>
                   <span class="raza">{{ m.raza }}</span>
-                  <span class="cruzado-tag" *ngIf="m.esCruzado">🔀 Cruzado</span>
-                  <span class="propio-tag" *ngIf="!m.esCruzado">♻️ Propio</span>
+                  <span class="tipo-tag cruzado-tag" *ngIf="m.esCruzado">🔀 Cruzado</span>
+                  <span class="tipo-tag propio-tag" *ngIf="!m.esCruzado">♻️ Propio</span>
                 </div>
                 <div class="match-lotes">
                   <div class="match-lado compra">
@@ -152,7 +173,11 @@
                     <span class="cabezas">{{ m.cabezasCompra }} cab.</span>
                     <span class="comercial-nm">{{ m.comercialCompra }}</span>
                   </div>
-                  <span class="flecha">⟷</span>
+                  <div class="match-conector">
+                    <span class="conector-linea"></span>
+                    <span class="conector-icon">⟷</span>
+                    <span class="conector-linea"></span>
+                  </div>
                   <div class="match-lado venta">
                     <span class="lado-lbl">VENTA</span>
                     <span class="lote-id">{{ m.loteVentaId }}</span>
