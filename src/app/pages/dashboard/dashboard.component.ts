@@ -53,6 +53,11 @@ export class DashboardComponent implements OnInit {
   submitLoading  = false;
   submitErrorMsg = '';
 
+  cuenta = { cedulaEmpleado: '', email: '', password: '' };
+  cuentaSuccess  = false;
+  cuentaLoading  = false;
+  cuentaErrorMsg = '';
+
   readonly roles = [
     { label: 'Comercial',     value: 'COMERCIAL' },
     { label: 'Gerencia',      value: 'GERENCIA'  },
@@ -109,7 +114,8 @@ export class DashboardComponent implements OnInit {
 
   crearEmpleado(): void {
     const { cedula, nombre, email, password, rol, departamento, telefono } = this.empleado;
-    if (!cedula.trim() || !nombre.trim() || !email.trim() || !password || !rol || !departamento) {
+    const cedulaStr = String(cedula).trim();
+    if (!cedulaStr || !nombre.trim() || !email.trim() || !password || !rol || !departamento) {
       this.submitErrorMsg = 'Completá todos los campos obligatorios.';
       this.cdr.detectChanges();
       return;
@@ -118,7 +124,7 @@ export class DashboardComponent implements OnInit {
     this.submitLoading  = true;
     this.submitErrorMsg = '';
 
-    const cedulaNum = parseInt(cedula, 10);
+    const cedulaNum = parseInt(cedulaStr, 10);
 
     this.http
       .post(`${environment.apiUrl}/api/empleados`, { cedula: cedulaNum, nombre, telefono: telefono || undefined, rol, departamento })
@@ -144,6 +150,43 @@ export class DashboardComponent implements OnInit {
       });
   }
 
+  crearCuenta(): void {
+    const { cedulaEmpleado, email, password } = this.cuenta;
+    if (!String(cedulaEmpleado).trim() || !email.trim() || !password) {
+      this.cuentaErrorMsg = 'Completá todos los campos.';
+      this.cdr.detectChanges();
+      return;
+    }
+    this.cuentaLoading  = true;
+    this.cuentaErrorMsg = '';
+
+    this.http
+      .post(`${environment.apiUrl}/api/usuarios`, {
+        email,
+        password,
+        cedulaEmpleado: parseInt(String(cedulaEmpleado), 10),
+      })
+      .pipe(timeout(4000))
+      .subscribe({
+        next: () => {
+          this.cuentaLoading = false;
+          this.cuentaSuccess = true;
+          this.cdr.detectChanges();
+        },
+        error: err => {
+          this.cuentaLoading  = false;
+          this.cuentaErrorMsg = this.parseError(err);
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  resetCuenta(): void {
+    this.cuenta        = { cedulaEmpleado: '', email: '', password: '' };
+    this.cuentaSuccess = false;
+    this.cuentaErrorMsg = '';
+  }
+
   private parseError(err: any): string {
     if (err.status === 0 || err.status === 502 || err.status === 503 || err.status === 504)
       return 'No se pudo conectar con el servidor.';
@@ -154,8 +197,8 @@ export class DashboardComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.empleado      = { cedula: '', nombre: '', email: '', password: '', rol: '', departamento: '', telefono: '' };
-    this.submitSuccess = false;
+    this.empleado       = { cedula: '', nombre: '', email: '', password: '', rol: '', departamento: '', telefono: '' };
+    this.submitSuccess  = false;
     this.submitErrorMsg = '';
   }
 }
