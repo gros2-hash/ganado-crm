@@ -161,18 +161,23 @@
                 </svg>
               </div>
               <h4>¡Empleado creado!</h4>
-              <p>{{ empleado.nombre }} fue dado de alta como <strong>{{ rolLabel() }}</strong> en la zona <strong>{{ empleado.zona }}</strong>.</p>
+              <p>{{ empleado.nombre }} fue dado de alta como <strong>{{ rolLabel() }}</strong> en <strong>{{ departamentoLabel() }}</strong>.</p>
               <button class="btn-reset" (click)="resetForm()">+ Crear otro empleado</button>
             </div>
 
             <!-- Formulario -->
             <form class="emp-form" *ngIf="!submitSuccess" (ngSubmit)="crearEmpleado()">
 
-              <div class="field-error" *ngIf="submitError">
-                Completá todos los campos obligatorios.
+              <div class="field-error" *ngIf="submitErrorMsg">
+                {{ submitErrorMsg }}
               </div>
 
-              <div class="form-row">
+              <div class="form-row two-col">
+                <div class="field">
+                  <label>Cédula <span class="req">*</span></label>
+                  <input type="number" [(ngModel)]="empleado.cedula" name="cedula"
+                    placeholder="Ej. 12345678" autocomplete="off" />
+                </div>
                 <div class="field">
                   <label>Nombre completo <span class="req">*</span></label>
                   <input type="text" [(ngModel)]="empleado.nombre" name="nombre"
@@ -188,6 +193,14 @@
                 </div>
               </div>
 
+              <div class="form-row">
+                <div class="field">
+                  <label>Contraseña <span class="req">*</span></label>
+                  <input type="password" [(ngModel)]="empleado.password" name="password"
+                    placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                </div>
+              </div>
+
               <div class="form-row two-col">
                 <div class="field">
                   <label>Rol <span class="req">*</span></label>
@@ -197,27 +210,28 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label>Zona <span class="req">*</span></label>
-                  <select [(ngModel)]="empleado.zona" name="zona">
+                  <label>Departamento <span class="req">*</span></label>
+                  <select [(ngModel)]="empleado.departamento" name="departamento">
                     <option value="">Seleccionar...</option>
-                    <option *ngFor="let z of zonas" [value]="z">{{ z }}</option>
+                    <option *ngFor="let d of departamentos" [value]="d.value">{{ d.label }}</option>
                   </select>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="field">
-                  <label>Teléfono</label>
+                  <label>Teléfono <span class="hint">formato 09XXXXXXX</span></label>
                   <input type="tel" [(ngModel)]="empleado.telefono" name="telefono"
-                    placeholder="+598 99 000 000" />
+                    placeholder="099123456" />
                 </div>
               </div>
 
-              <button type="submit" class="btn-crear">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <button type="submit" class="btn-crear" [disabled]="submitLoading">
+                <svg *ngIf="!submitLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                Crear empleado
+                <span *ngIf="!submitLoading">Crear empleado</span>
+                <span *ngIf="submitLoading" class="spinner"></span>
               </button>
 
             </form>
