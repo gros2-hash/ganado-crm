@@ -48,6 +48,8 @@ export class DashboardComponent implements OnInit {
     { tipo: 'venta',  lote: 'LV-007', monto: 192000, fecha: '14 Nov', contraparte: 'Frigorífico Norte'     },
   ];
 
+  activeTab: 'empleado' | 'cuenta' = 'empleado';
+
   empleado: NuevoEmpleado = { cedula: '', nombre: '', email: '', password: '', rol: '', departamento: '', telefono: '' };
   submitSuccess  = false;
   submitLoading  = false;
