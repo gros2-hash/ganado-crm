@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface User {
@@ -17,6 +17,14 @@ interface LoginResponse {
   expiraEnSegundos: number;
 }
 
+export interface RegisterCompletePayload {
+  email: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  departamento: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly TOKEN_KEY = 'crm_token';
@@ -24,10 +32,30 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
+  private readonly TIMEOUT_MS = 4000;
+
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, { email, password })
-      .pipe(tap(res => this.storeSession(res.token)));
+      .pipe(timeout(this.TIMEOUT_MS), tap(res => this.storeSession(res.token)));
+  }
+
+  registerInit(email: string, ci: string, password: string): Observable<any> {
+    return this.http
+      .post(`${environment.apiUrl}/api/auth/register`, { email, ci, password })
+      .pipe(timeout(this.TIMEOUT_MS));
+  }
+
+  registerVerify(email: string, otp: string): Observable<any> {
+    return this.http
+      .post(`${environment.apiUrl}/api/auth/register/verify`, { email, otp })
+      .pipe(timeout(this.TIMEOUT_MS));
+  }
+
+  registerComplete(data: RegisterCompletePayload): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/api/auth/register/complete`, data)
+      .pipe(timeout(this.TIMEOUT_MS), tap(res => this.storeSession(res.token)));
   }
 
   logout(): void {

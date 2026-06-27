@@ -1,17 +1,14 @@
 <div class="crm-layout">
 
-  <!-- ── SIDEBAR ── -->
   <app-sidebar [open]="sidebarOpen" />
 
-  <!-- ── MAIN ── -->
   <main class="main-content">
 
-    <!-- TOPBAR -->
     <header class="topbar">
       <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
       <div class="breadcrumb">
         <span class="bc-title">Matches</span>
-        <span class="bc-sub">— Oportunidades de negocio detectadas</span>
+        <span class="bc-sub">— Oportunidades detectadas</span>
       </div>
       <div class="topbar-right">
         <span class="total-badge">{{ filtrados.length }} matches</span>
@@ -19,208 +16,259 @@
       <app-user-menu />
     </header>
 
-    <div class="content">
+    <div class="workspace">
 
-      <!-- KPIs -->
-      <div class="kpi-row" *ngIf="stats">
-        <div class="mini-kpi">          <span class="mk-val">{{ stats.total }}</span>      <span class="mk-lbl">Total matches</span></div>
-        <div class="mini-kpi nuevo">    <span class="mk-val">{{ stats.nuevos }}</span>     <span class="mk-lbl">Nuevos</span></div>
-        <div class="mini-kpi proceso">  <span class="mk-val">{{ stats.enProgreso }}</span> <span class="mk-lbl">En progreso</span></div>
-        <div class="mini-kpi cerrado">  <span class="mk-val">{{ stats.cerrados }}</span>   <span class="mk-lbl">Cerrados</span></div>
-        <div class="mini-kpi cruzado">  <span class="mk-val">{{ stats.cruzados }}</span>   <span class="mk-lbl">Cruzados</span></div>
-        <div class="mini-kpi alta-compat"><span class="mk-val">{{ stats.altaCompat }}</span> <span class="mk-lbl">≥80% compat.</span></div>
-      </div>
+      <!-- ── PANEL IZQUIERDO: lista ── -->
+      <div class="lista-panel">
 
-      <!-- LEYENDA DEL MOTOR DE COMPATIBILIDAD -->
-      <div class="compat-legend">
-        <span class="legend-title">🧠 Motor de compatibilidad:</span>
-        <span class="legend-item tipo">Tipo ganado (40 pts)</span>
-        <span class="legend-item raza">Raza (20 pts)</span>
-        <span class="legend-item precio">Precio/margen (20 pts)</span>
-        <span class="legend-item cabezas">Cabezas (20 pts)</span>
-        <span class="legend-sep">—</span>
-        <span class="legend-alta">≥80% Alta</span>
-        <span class="legend-media">60–79% Media</span>
-        <span class="legend-baja">&lt;60% Baja</span>
-      </div>
+        <!-- KPIs strip -->
+        <div class="kpi-strip" *ngIf="stats">
+          <div class="kpi-item">
+            <span class="kv">{{ stats.total }}</span>
+            <span class="kl">Total</span>
+          </div>
+          <div class="kpi-item alta">
+            <span class="kv">{{ stats.altaCompat }}</span>
+            <span class="kl">Alta compat.</span>
+          </div>
+          <div class="kpi-item prog">
+            <span class="kv">{{ stats.enProgreso }}</span>
+            <span class="kl">En progreso</span>
+          </div>
+        </div>
 
-      <!-- FILTROS -->
-      <div class="filtros-bar">
-        <input
-          class="search-input"
-          type="text"
-          placeholder="Buscar por lote, tipo de ganado o comercial..."
-          [(ngModel)]="busqueda"
-          (ngModelChange)="aplicarFiltros()"
-        />
-        <select class="select-filtro" [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()">
-          <option value="todos">Todos los estados</option>
-          <option *ngFor="let e of estadosOpciones" [value]="e.valor">{{ e.label }}</option>
-        </select>
-        <select class="select-filtro" [(ngModel)]="filtroTipoGanado" (ngModelChange)="aplicarFiltros()">
-          <option value="todos">Todo el ganado</option>
-          <option *ngFor="let t of tiposGanado" [value]="t">{{ t }}</option>
-        </select>
-        <select class="select-filtro" [(ngModel)]="filtroComercial" (ngModelChange)="aplicarFiltros()">
-          <option value="todos">Todos los comerciales</option>
-          <option *ngFor="let c of comerciales" [value]="c">{{ c }}</option>
-        </select>
-        <select class="select-filtro" [(ngModel)]="filtroCruzado" (ngModelChange)="aplicarFiltros()">
-          <option value="todos">Propio + Cruzado</option>
-          <option value="cruzado">Solo cruzados</option>
-          <option value="propio">Solo propios</option>
-        </select>
-      </div>
+        <!-- Filtros -->
+        <div class="filtros">
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Buscar lote, tipo, comercial..."
+            [(ngModel)]="busqueda"
+            (ngModelChange)="aplicarFiltros()"
+          />
+          <select class="select-estado" [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltros()">
+            <option value="todos">Todos los estados</option>
+            <option *ngFor="let e of estadosOpciones" [value]="e.valor">{{ e.label }}</option>
+          </select>
+        </div>
 
-      <!-- TABLA DE MATCHES -->
-      <div class="tabla-wrapper">
-        <table class="match-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Ganado</th>
-              <th>Lado compra</th>
-              <th>Lado venta</th>
-              <th>Compatibilidad</th>
-              <th>Margen</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Visibilidad</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let m of filtrados"
-                class="match-row"
-                [class.cruzado]="m.esCruzado"
-                [class.cerrado]="m.estado === 'cerrado'"
-                [class.nuevo]="m.estado === 'nuevo'">
+        <!-- Cards -->
+        <div class="cards-scroll">
+          <div
+            class="match-card"
+            *ngFor="let m of filtrados"
+            [class.selected]="matchSel?.id === m.id"
+            [class.cruzado]="m.esCruzado"
+            (click)="seleccionar(m)"
+          >
+            <!-- Score ring -->
+            <div class="score-ring" [style.background]="scoreGradient(m.compatibilidad.total)">
+              <div class="score-inner">{{ m.compatibilidad.total }}</div>
+            </div>
 
-              <!-- ID -->
-              <td class="td-id">
-                <span class="match-id">#{{ m.id }}</span>
-                <span class="cruzado-tag" *ngIf="m.esCruzado">🔀</span>
-              </td>
-
-              <!-- Ganado -->
-              <td class="td-ganado">
-                <span class="tipo">🐄 {{ m.tipoGanado }}</span>
-                <span class="raza">{{ m.raza }}</span>
-                <span class="dpto">📍 {{ m.departamento }}</span>
-              </td>
-
-              <!-- Lado compra -->
-              <td class="td-lado compra-side">
-                <div class="lote-chip compra">
-                  <span class="chip-id">{{ m.loteCompraId }}</span>
-                  <span class="chip-cab">{{ m.cabezasCompra }} cab.</span>
-                  <span class="chip-precio">${{ m.precioCompra | number }}/cab</span>
-                </div>
-                <div class="comercial-row">
-                  <span class="av compra">{{ m.comercialCompradorAvatar }}</span>
-                  <span class="cn">{{ m.comercialComprador }}</span>
-                </div>
-              </td>
-
-              <!-- Lado venta -->
-              <td class="td-lado venta-side">
-                <div class="lote-chip venta">
-                  <span class="chip-id">{{ m.loteVentaId }}</span>
-                  <span class="chip-cab">{{ m.cabezasVenta }} cab.</span>
-                  <span class="chip-precio">${{ m.precioVenta | number }}/cab</span>
-                </div>
-                <div class="comercial-row">
-                  <span class="av venta">{{ m.comercialVendedorAvatar }}</span>
-                  <span class="cn">{{ m.comercialVendedor }}</span>
-                </div>
-              </td>
-
-              <!-- COMPATIBILIDAD -->
-              <td class="td-compat">
-                <div class="compat-score" [class]="'compat-' + svc.colorCompatibilidad(m.compatibilidad.total)">
-                  <span class="compat-pct">{{ m.compatibilidad.total }}%</span>
-                  <div class="compat-bar-wrap">
-                    <div class="compat-bar-fill" [style.width.%]="m.compatibilidad.total"></div>
-                  </div>
-                </div>
-                <div class="compat-detalle">
-                  <span class="cd-item" title="Tipo de ganado">🐄 {{ m.compatibilidad.tipoGanado }}/40</span>
-                  <span class="cd-item" title="Raza">🔬 {{ m.compatibilidad.raza }}/20</span>
-                  <span class="cd-item" title="Precio">💲 {{ m.compatibilidad.precio }}/20</span>
-                  <span class="cd-item" title="Cabezas">🔢 {{ m.compatibilidad.cabezas }}/20</span>
-                </div>
-              </td>
-
-              <!-- Margen precio -->
-              <td class="td-margen">
-                <span class="margen-pct" [class.positivo]="margenPct(m) > 0" [class.negativo]="margenPct(m) < 0">
+            <!-- Info -->
+            <div class="card-info">
+              <div class="card-top">
+                <span class="card-tipo">{{ m.tipoGanado }}</span>
+                <span class="estado-pill estado-{{ m.estado }}">{{ estadoLabel(m.estado) }}</span>
+              </div>
+              <div class="card-raza">{{ m.raza }}</div>
+              <div class="card-lotes">
+                <span class="lote compra">{{ m.loteCompraId }}</span>
+                <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8 4a1 1 0 0 1 1-1h2a1 1 0 0 1 .707 1.707L9.414 7H15a1 1 0 1 1 0 2H9.414l2.293 2.293A1 1 0 0 1 11 13H9a1 1 0 0 1-1-1V4z" clip-rule="evenodd" />
+                  <path d="M5 10a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
+                </svg>
+                <span class="lote venta">{{ m.loteVentaId }}</span>
+              </div>
+              <div class="card-footer">
+                <span class="card-dpto">{{ m.departamento }}</span>
+                <span class="card-margen" [class.pos]="margenPct(m) > 0" [class.neg]="margenPct(m) < 0">
                   {{ margenPct(m) > 0 ? '+' : '' }}{{ margenPct(m) }}%
                 </span>
-                <span class="margen-abs">${{ (m.precioVenta - m.precioCompra) | number }}/cab</span>
-              </td>
+              </div>
+            </div>
 
-              <!-- Fecha -->
-              <td class="td-fecha">
-                <span class="fecha">{{ m.fecha | date:'dd/MM/yyyy' }}</span>
-                <span class="hora">{{ m.fecha | date:'HH:mm' }}</span>
-              </td>
+            <!-- Fecha -->
+            <div class="card-fecha">{{ m.fecha | date:'dd MMM' }}</div>
+          </div>
 
-              <!-- Estado -->
-              <td class="td-estado">
-                <span class="estado-badge estado-{{ m.estado }}">{{ estadoLabel(m.estado) }}</span>
-              </td>
+          <div class="empty-list" *ngIf="filtrados.length === 0">
+            Sin matches para los filtros aplicados.
+          </div>
+        </div>
+      </div>
 
-              <!-- Visibilidad -->
-              <td class="td-visto">
-                <div class="visto-row">
-                  <span class="visto-chip" [class.visto]="m.vistoVendedor" [class.no-visto]="!m.vistoVendedor">
-                    💰 {{ m.vistoVendedor ? 'Visto' : 'No visto' }}
-                  </span>
-                  <span class="visto-chip" [class.visto]="m.vistoComprador" [class.no-visto]="!m.vistoComprador">
-                    🛒 {{ m.vistoComprador ? 'Visto' : 'No visto' }}
-                  </span>
+      <!-- ── PANEL DERECHO: comparativo ── -->
+      <div class="comp-panel">
+
+        <!-- Empty state -->
+        <div class="comp-empty" *ngIf="!matchSel">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+          </svg>
+          <p>Seleccioná un match para ver el comparativo</p>
+        </div>
+
+        <!-- Comparativo detail -->
+        <div class="comparativo" *ngIf="matchSel">
+
+          <!-- Header -->
+          <div class="comp-head">
+            <div class="comp-title">
+              <span class="comp-tipo">{{ matchSel.tipoGanado }}</span>
+              <span class="comp-raza">· {{ matchSel.raza }}</span>
+              <span class="cruzado-tag" *ngIf="matchSel.esCruzado">Cruzado</span>
+            </div>
+            <span class="estado-pill estado-{{ matchSel.estado }}">{{ estadoLabel(matchSel.estado) }}</span>
+          </div>
+          <div class="comp-meta">
+            <span>📍 {{ matchSel.departamento }}</span>
+            <span>·</span>
+            <span>{{ matchSel.fecha | date:'dd MMM yyyy' }}</span>
+            <span>·</span>
+            <span>Match #{{ matchSel.id }}</span>
+          </div>
+
+          <!-- VS row -->
+          <div class="vs-row">
+
+            <!-- Lado compra -->
+            <div class="lado lado-compra">
+              <div class="lado-badge">COMPRA</div>
+              <div class="lado-id">{{ matchSel.loteCompraId }}</div>
+              <div class="lado-cabezas">{{ matchSel.cabezasCompra | number }} cab.</div>
+              <div class="lado-precio">${{ matchSel.precioCompra | number }}<span>/cab</span></div>
+              <div class="lado-comercial">
+                <span class="av av-compra">{{ matchSel.comercialCompradorAvatar }}</span>
+                <span>{{ matchSel.comercialComprador }}</span>
+              </div>
+            </div>
+
+            <!-- Score central -->
+            <div class="vs-center">
+              <div class="score-big" [style.background]="scoreGradient(matchSel.compatibilidad.total)">
+                <div class="score-big-inner">
+                  <span class="sbig-num">{{ matchSel.compatibilidad.total }}</span>
+                  <span class="sbig-sym">%</span>
                 </div>
-              </td>
+              </div>
+              <span class="vs-label">compatibilidad</span>
+            </div>
 
-              <!-- Acciones -->
-              <td class="td-acciones">
-                <div class="acciones-col">
-                  <button
-                    class="btn-accion marcar-v"
-                    *ngIf="!m.vistoVendedor && m.estado !== 'cerrado' && m.estado !== 'descartado'"
-                    (click)="marcarVistoVendedor(m, $event)"
-                    title="Marcar visto por vendedor"
-                  >✓ Vendedor</button>
-                  <button
-                    class="btn-accion marcar-c"
-                    *ngIf="!m.vistoComprador && m.estado !== 'cerrado' && m.estado !== 'descartado'"
-                    (click)="marcarVistoComprador(m, $event)"
-                    title="Marcar visto por comprador"
-                  >✓ Comprador</button>
-                  <button
-                    class="btn-accion negociar"
-                    *ngIf="m.estado === 'ambos_vistos'"
-                    (click)="avanzar(m, 'en_negociacion', $event)"
-                  >→ Negociar</button>
-                  <button
-                    class="btn-accion cerrar"
-                    *ngIf="m.estado === 'en_negociacion'"
-                    (click)="avanzar(m, 'cerrado', $event)"
-                  >✓ Cerrar</button>
-                  <button
-                    class="btn-accion descartar"
-                    *ngIf="m.estado !== 'cerrado' && m.estado !== 'descartado'"
-                    (click)="avanzar(m, 'descartado', $event)"
-                  >✕</button>
+            <!-- Lado venta -->
+            <div class="lado lado-venta">
+              <div class="lado-badge">VENTA</div>
+              <div class="lado-id">{{ matchSel.loteVentaId }}</div>
+              <div class="lado-cabezas">{{ matchSel.cabezasVenta | number }} cab.</div>
+              <div class="lado-precio">${{ matchSel.precioVenta | number }}<span>/cab</span></div>
+              <div class="lado-comercial">
+                <span class="av av-venta">{{ matchSel.comercialVendedorAvatar }}</span>
+                <span>{{ matchSel.comercialVendedor }}</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Dimensiones -->
+          <div class="dimensiones">
+            <div class="dim-title">Detalle de compatibilidad</div>
+
+            <div class="dim-row">
+              <span class="dim-label">Tipo de ganado</span>
+              <div class="dim-bar">
+                <div class="dim-fill"
+                  [style.width.%]="dimPct(matchSel.compatibilidad.tipoGanado, 40)"
+                  [style.background]="dimColor(matchSel.compatibilidad.tipoGanado, 40)">
                 </div>
-              </td>
+              </div>
+              <span class="dim-pts">{{ matchSel.compatibilidad.tipoGanado }}/40</span>
+              <span class="dim-status" [style.color]="dimColor(matchSel.compatibilidad.tipoGanado, 40)">
+                {{ dimStatus(matchSel.compatibilidad.tipoGanado, 40) }}
+              </span>
+            </div>
 
-            </tr>
-            <tr *ngIf="filtrados.length === 0">
-              <td colspan="10" class="empty-state">No hay matches con los filtros seleccionados.</td>
-            </tr>
-          </tbody>
-        </table>
+            <div class="dim-row">
+              <span class="dim-label">Raza</span>
+              <div class="dim-bar">
+                <div class="dim-fill"
+                  [style.width.%]="dimPct(matchSel.compatibilidad.raza, 20)"
+                  [style.background]="dimColor(matchSel.compatibilidad.raza, 20)">
+                </div>
+              </div>
+              <span class="dim-pts">{{ matchSel.compatibilidad.raza }}/20</span>
+              <span class="dim-status" [style.color]="dimColor(matchSel.compatibilidad.raza, 20)">
+                {{ dimStatus(matchSel.compatibilidad.raza, 20) }}
+              </span>
+            </div>
+
+            <div class="dim-row">
+              <span class="dim-label">Precio / margen</span>
+              <div class="dim-bar">
+                <div class="dim-fill"
+                  [style.width.%]="dimPct(matchSel.compatibilidad.precio, 20)"
+                  [style.background]="dimColor(matchSel.compatibilidad.precio, 20)">
+                </div>
+              </div>
+              <span class="dim-pts">{{ matchSel.compatibilidad.precio }}/20</span>
+              <span class="dim-status" [style.color]="dimColor(matchSel.compatibilidad.precio, 20)">
+                {{ dimStatus(matchSel.compatibilidad.precio, 20) }}
+              </span>
+            </div>
+
+            <div class="dim-row">
+              <span class="dim-label">Cabezas</span>
+              <div class="dim-bar">
+                <div class="dim-fill"
+                  [style.width.%]="dimPct(matchSel.compatibilidad.cabezas, 20)"
+                  [style.background]="dimColor(matchSel.compatibilidad.cabezas, 20)">
+                </div>
+              </div>
+              <span class="dim-pts">{{ matchSel.compatibilidad.cabezas }}/20</span>
+              <span class="dim-status" [style.color]="dimColor(matchSel.compatibilidad.cabezas, 20)">
+                {{ dimStatus(matchSel.compatibilidad.cabezas, 20) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Notas -->
+          <div class="comp-notas" *ngIf="matchSel.notas">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+            </svg>
+            {{ matchSel.notas }}
+          </div>
+
+          <!-- Acciones -->
+          <div class="comp-acciones">
+            <button class="btn-acc vend"
+              *ngIf="!matchSel.vistoVendedor && matchSel.estado !== 'cerrado' && matchSel.estado !== 'descartado'"
+              (click)="marcarVistoVendedor($event)">
+              ✓ Visto vendedor
+            </button>
+            <button class="btn-acc comp"
+              *ngIf="!matchSel.vistoComprador && matchSel.estado !== 'cerrado' && matchSel.estado !== 'descartado'"
+              (click)="marcarVistoComprador($event)">
+              ✓ Visto comprador
+            </button>
+            <button class="btn-acc neg"
+              *ngIf="matchSel.estado === 'ambos_vistos'"
+              (click)="avanzar('en_negociacion', $event)">
+              → Negociar
+            </button>
+            <button class="btn-acc cerr"
+              *ngIf="matchSel.estado === 'en_negociacion'"
+              (click)="avanzar('cerrado', $event)">
+              ✓ Cerrar trato
+            </button>
+            <button class="btn-acc desc"
+              *ngIf="matchSel.estado !== 'cerrado' && matchSel.estado !== 'descartado'"
+              (click)="avanzar('descartado', $event)">
+              ✕ Descartar
+            </button>
+          </div>
+
+        </div>
       </div>
 
     </div>

@@ -3,6 +3,8 @@
     "target": "http://localhost:8080",
     "changeOrigin": true,
     "secure": false,
-    "logLevel": "info"
+    "logLevel": "info",
+    "proxyTimeout": 4000,
+    "timeout": 4000
   }
 }

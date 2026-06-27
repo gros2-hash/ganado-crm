@@ -1,64 +1,87 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { LotesCompraService } from '../../services/lotes-compra.service';
 import { LotesVentaService } from '../../services/lotes-venta.service';
 import { ProductoresService } from '../../services/productores.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { UserMenuComponent } from '../../components/user-menu/user-menu.component';
 
-interface Lote {
-  id: string; tipo: string; cabezas: number; precioUnitario: number;
-  estado: 'disponible' | 'vendido' | 'en_proceso'; fecha: string; campo: string; raza: string;
-}
-
 interface Movimiento {
   tipo: 'compra' | 'venta'; lote: string; monto: number; fecha: string; contraparte: string;
+}
+
+interface NuevoEmpleado {
+  nombre: string; email: string; rol: string; zona: string; telefono: string;
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterModule, SidebarComponent, UserMenuComponent],
+  imports: [CommonModule, DatePipe, RouterModule, FormsModule, SidebarComponent, UserMenuComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
   sidebarOpen = true;
   currentDate = new Date();
-  lotesCompraStats: ReturnType<LotesCompraService['getStats']> | null = null;
-  ventasStats: ReturnType<LotesVentaService['getStats']> | null = null;
-  productoresStats: ReturnType<ProductoresService['getStats']> | null = null;
 
-  lotes: Lote[] = [
-    { id: 'L-001', tipo: 'Novillos', cabezas: 120, precioUnitario: 1850, estado: 'disponible', fecha: '2024-11-02', campo: 'Est. La Querencia', raza: 'Hereford' },
-    { id: 'L-002', tipo: 'Terneros', cabezas: 85,  precioUnitario: 920,  estado: 'en_proceso', fecha: '2024-11-08', campo: 'Est. Don Carlos',   raza: 'Aberdeen Angus' },
-    { id: 'L-003', tipo: 'Vacas',    cabezas: 60,  precioUnitario: 1400, estado: 'vendido',    fecha: '2024-10-25', campo: 'Est. Las Flores',   raza: 'Criolla' },
-    { id: 'L-004', tipo: 'Novillos', cabezas: 200, precioUnitario: 1920, estado: 'disponible', fecha: '2024-11-10', campo: 'Est. San Jorge',    raza: 'Hereford' },
-    { id: 'L-005', tipo: 'Toros',    cabezas: 15,  precioUnitario: 4500, estado: 'disponible', fecha: '2024-11-12', campo: 'Est. El Ombú',      raza: 'Aberdeen Angus' },
-  ];
+  lotesCompraStats: ReturnType<LotesCompraService['getStats']> | null = null;
+  ventasStats:      ReturnType<LotesVentaService['getStats']>   | null = null;
+  productoresStats: ReturnType<ProductoresService['getStats']>  | null = null;
 
   movimientos: Movimiento[] = [
-    { tipo: 'venta',  lote: 'L-003', monto: 84000,  fecha: '2024-10-25', contraparte: 'Frigorífico Canelones' },
-    { tipo: 'compra', lote: 'L-004', monto: 384000, fecha: '2024-11-10', contraparte: 'Est. San Jorge' },
-    { tipo: 'compra', lote: 'L-005', monto: 67500,  fecha: '2024-11-12', contraparte: 'Cabaña El Ombú' },
-    { tipo: 'venta',  lote: 'L-002', monto: 78200,  fecha: '2024-11-08', contraparte: 'Exp. Montevideo' },
+    { tipo: 'venta',  lote: 'LV-003', monto: 84000,  fecha: '25 Oct',  contraparte: 'Frigorífico Canelones' },
+    { tipo: 'compra', lote: 'LC-004', monto: 384000, fecha: '10 Nov',  contraparte: 'Est. San Jorge' },
+    { tipo: 'compra', lote: 'LC-005', monto: 67500,  fecha: '12 Nov',  contraparte: 'Cabaña El Ombú' },
+    { tipo: 'venta',  lote: 'LV-002', monto: 78200,  fecha: '08 Nov',  contraparte: 'Exp. Montevideo' },
+    { tipo: 'venta',  lote: 'LV-007', monto: 192000, fecha: '14 Nov',  contraparte: 'Frigorífico Norte' },
   ];
 
-  get totalCabezas(): number     { return this.lotes.filter(l => l.estado !== 'vendido').reduce((s, l) => s + l.cabezas, 0); }
-  get lotesDisponibles(): number  { return this.lotes.filter(l => l.estado === 'disponible').length; }
-  get facturacionMes(): number    { return this.movimientos.filter(m => m.tipo === 'venta').reduce((s, m) => s + m.monto, 0); }
-  get comprasMes(): number        { return this.movimientos.filter(m => m.tipo === 'compra').reduce((s, m) => s + m.monto, 0); }
+  empleado: NuevoEmpleado = { nombre: '', email: '', rol: '', zona: '', telefono: '' };
+  submitSuccess = false;
+  submitError   = false;
+
+  readonly roles = [
+    { label: 'Administrador', value: 'admin'      },
+    { label: 'Gerencia',      value: 'gerencia'   },
+    { label: 'Comercial',     value: 'comercial'  },
+  ];
+  readonly zonas = ['Norte', 'Sur', 'Este', 'Oeste', 'Centro'];
 
   constructor(
     private lotesCompraSvc: LotesCompraService,
-    private ventaService: LotesVentaService,
-    private productoresSvc: ProductoresService
+    private ventaService:   LotesVentaService,
+    private productoresSvc: ProductoresService,
   ) {}
 
   ngOnInit(): void {
     this.lotesCompraStats = this.lotesCompraSvc.getStats();
-    this.ventasStats = this.ventaService.getStats();
+    this.ventasStats      = this.ventaService.getStats();
     this.productoresStats = this.productoresSvc.getStats();
+  }
+
+  get facturacionMes(): number {
+    return this.movimientos.filter(m => m.tipo === 'venta').reduce((s, m) => s + m.monto, 0);
+  }
+
+  rolLabel(): string {
+    return this.roles.find(r => r.value === this.empleado.rol)?.label ?? this.empleado.rol;
+  }
+
+  crearEmpleado(): void {
+    const { nombre, email, rol, zona } = this.empleado;
+    if (!nombre.trim() || !email.trim() || !rol || !zona) {
+      this.submitError = true;
+      setTimeout(() => this.submitError = false, 3000);
+      return;
+    }
+    this.submitSuccess = true;
+  }
+
+  resetForm(): void {
+    this.empleado = { nombre: '', email: '', rol: '', zona: '', telefono: '' };
+    this.submitSuccess = false;
   }
 }
