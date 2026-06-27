@@ -20,38 +20,6 @@
     <!-- ═══ LISTA ═══ -->
     <div class="content" *ngIf="modoVista === 'lista'">
 
-      <!-- KPIs -->
-      <div class="kpi-row" *ngIf="stats">
-        <div class="mini-kpi">
-          <span class="mk-icon">📦</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.total }}</span><span class="mk-lbl">Total</span></div>
-        </div>
-        <div class="mini-kpi disponible">
-          <span class="mk-icon">🟢</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.disponible }}</span><span class="mk-lbl">Disponibles</span></div>
-        </div>
-        <div class="mini-kpi reservado">
-          <span class="mk-icon">🔒</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.reservado }}</span><span class="mk-lbl">Reservados</span></div>
-        </div>
-        <div class="mini-kpi negociacion">
-          <span class="mk-icon">🤝</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.negociacion }}</span><span class="mk-lbl">Negociación</span></div>
-        </div>
-        <div class="mini-kpi cerrado">
-          <span class="mk-icon">✅</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.cerrado }}</span><span class="mk-lbl">Cerrados</span></div>
-        </div>
-        <div class="mini-kpi facturado">
-          <span class="mk-icon">💵</span>
-          <div class="mk-body"><span class="mk-val">USD {{ stats.facturadoCerrado | number }}</span><span class="mk-lbl">Facturado</span></div>
-        </div>
-        <div class="mini-kpi margen">
-          <span class="mk-icon">📈</span>
-          <div class="mk-body"><span class="mk-val">USD {{ stats.margenTotal | number }}</span><span class="mk-lbl">Margen bruto</span></div>
-        </div>
-      </div>
-
       <!-- FILTROS -->
       <div class="filtros-bar">
         <input class="search-input" [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()" placeholder="🔍 Buscar ID, comprador, empresa, descripción..." />
@@ -76,10 +44,8 @@
         >
           <!-- TOP -->
           <div class="lc-top">
-            <span class="id-badge">{{ l.id }}</span>
             <div class="top-badges">
               <span class="estado-badge {{ l.estado }}">{{ estadoLabel(l.estado) }}</span>
-              <span class="origen-badge {{ l.origen }}">{{ l.origen === 'chatbot' ? '🤖 Chatbot' : '✏️ Manual' }}</span>
             </div>
           </div>
 
@@ -113,20 +79,14 @@
             </div>
             <div class="lm-sep" *ngIf="l.pesoPromedio"></div>
             <div class="lm-item precio">
-              <span class="lm-val">{{ l.precioUnitario | number }}</span>
-              <span class="lm-lbl">USD/cab</span>
-            </div>
-            <div class="lm-sep" *ngIf="margenUnitario(l) !== null"></div>
-            <div class="lm-item margen" *ngIf="margenUnitario(l) as mg">
-              <span class="lm-val">+{{ mg | number }}</span>
-              <span class="lm-lbl">margen/cab</span>
+              <span class="lm-val">{{ valorVenta(l) | number }}</span>
+              <span class="lm-lbl">USD total</span>
             </div>
           </div>
 
           <!-- FOOTER -->
           <div class="lc-footer">
             <span class="destino-chip">{{ destinoIcon(l.destino) }} {{ destinoLabel(l.destino) }}</span>
-            <span class="pago-chip">{{ pagoLabel(l.formaPago) }}</span>
             <div class="lc-meta">
               <div class="ag-av">{{ l.agenteAvatar }}</div>
               <span class="lc-fecha">{{ l.fechaCreacion }}</span>
