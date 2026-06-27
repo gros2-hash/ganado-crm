@@ -1,20 +1,19 @@
 <div class="login-wrapper">
   <div class="login-left">
-    <div class="brand">
-      <span class="brand-icon">🐄</span>
-      <span class="brand-name">GanadoCRM</span>
-    </div>
-    <h1>Gestión integral<br>de lotes de ganado</h1>
-    <p>Compra, venta y administración de hacienda en una sola plataforma.</p>
-    <div class="stats-preview">
-      <div class="stat"><span class="stat-num">1.240</span><span class="stat-label">Cabezas activas</span></div>
-      <div class="stat"><span class="stat-num">38</span><span class="stat-label">Lotes en gestión</span></div>
-      <div class="stat"><span class="stat-num">$2.4M</span><span class="stat-label">Facturación mensual</span></div>
+    <div class="left-content">
+      <div class="company-logo">
+        <img
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRvXxvezRkQaU5JgcEatIZhpiSSU1hKiOklEojAb-dkleSxYwEXMWsxGM&s=10"
+          alt="Valdez y Cía"
+        />
+      </div>
+      <h1>Valdez y Cía</h1>
+      <p>Sistema de gestión de hacienda</p>
     </div>
   </div>
 
   <div class="login-right">
-    <div class="login-card">
+    <div class="login-card" [class.shake]="shake">
       <div class="card-header">
         <h2>Iniciar sesión</h2>
         <p>Accedé a tu cuenta para continuar</p>
@@ -22,17 +21,17 @@
 
       <form (ngSubmit)="onSubmit()" #loginForm="ngForm" autocomplete="off">
         <div class="field-group">
-          <label for="username">Usuario</label>
+          <label for="email">Email</label>
           <div class="input-wrapper">
-            <span class="input-icon">👤</span>
+            <span class="input-icon">✉️</span>
             <input
-              id="username"
-              type="text"
-              [(ngModel)]="username"
-              name="username"
-              placeholder="Ingresá tu usuario"
+              id="email"
+              type="email"
+              [(ngModel)]="email"
+              name="email"
+              placeholder="Ingresá tu email"
               [class.error-input]="error"
-              autocomplete="username"
+              autocomplete="email"
             />
           </div>
         </div>
@@ -57,11 +56,8 @@
         </div>
 
         <div class="error-msg" *ngIf="error">
-          <span>⚠️</span> {{ error }}
-        </div>
-
-        <div class="demo-hint">
-          <span>💡</span> Demo: <strong>admin</strong> / <strong>ganado2024</strong>
+          <span class="error-icon">✕</span>
+          <span>{{ error }}</span>
         </div>
 
         <button type="submit" class="btn-login" [class.loading]="loading" [disabled]="loading">
