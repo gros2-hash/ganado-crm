@@ -1,7 +1,8 @@
-import { Component, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { TimeoutError } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 
 type Step = 'login' | 'reg1' | 'reg2' | 'reg3';
@@ -57,7 +58,7 @@ export class LoginComponent {
     'San José', 'Soriano', 'Tacuarembó', 'Treinta y Tres',
   ];
 
-  constructor(private auth: AuthService, private router: Router) {
+  constructor(private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     if (this.auth.isAuthenticated()) this.router.navigate(['/dashboard']);
   }
 
@@ -74,12 +75,8 @@ export class LoginComponent {
       error: err => {
         this.loginLoading = false;
         this.loginPassword = '';
-        const msg = err.status === 401
-          ? (err.error?.detail ?? 'Credenciales inválidas.')
-          : err.status === 0
-          ? 'No se pudo conectar con el servidor.'
-          : `Error ${err.status}: ${err.error?.detail ?? err.message}`;
-        this.triggerShake('login', msg);
+        this.triggerShake('login', this.parseHttpError(err, 401, 'Credenciales inválidas.'));
+        this.cdr.detectChanges();
       },
     });
   }
@@ -98,10 +95,11 @@ export class LoginComponent {
     }
     this.reg1Loading = true;
     this.auth.registerInit(this.regEmail, this.regCi, this.regPassword).subscribe({
-      next: () => { this.reg1Loading = false; this.goTo('reg2'); },
+      next: () => { this.reg1Loading = false; this.goTo('reg2'); this.cdr.detectChanges(); },
       error: err => {
         this.reg1Loading = false;
-        this.reg1Error = err.error?.detail ?? 'Error al enviar el código. Intentá de nuevo.';
+        this.reg1Error = this.parseHttpError(err, 0, 'Error al enviar el código. Intentá de nuevo.');
+        this.cdr.detectChanges();
       },
     });
   }
@@ -142,10 +140,11 @@ export class LoginComponent {
     if (code.length < 6) { this.otpError = 'Ingresá el código completo de 6 dígitos.'; return; }
     this.otpLoading = true;
     this.auth.registerVerify(this.regEmail, code).subscribe({
-      next: () => { this.otpLoading = false; this.goTo('reg3'); },
+      next: () => { this.otpLoading = false; this.goTo('reg3'); this.cdr.detectChanges(); },
       error: err => {
         this.otpLoading = false;
-        this.otpError = err.error?.detail ?? 'Código incorrecto. Verificá e intentá de nuevo.';
+        this.otpError = this.parseHttpError(err, 0, 'Código incorrecto. Verificá e intentá de nuevo.');
+        this.cdr.detectChanges();
       },
     });
   }
@@ -174,7 +173,8 @@ export class LoginComponent {
       next: () => this.router.navigate(['/dashboard']),
       error: err => {
         this.reg3Loading = false;
-        this.reg3Error = err.error?.detail ?? 'Error al completar el registro.';
+        this.reg3Error = this.parseHttpError(err, 0, 'Error al completar el registro.');
+        this.cdr.detectChanges();
       },
     });
   }
@@ -186,5 +186,16 @@ export class LoginComponent {
     this.loginError = msg;
     this.loginShake = true;
     setTimeout(() => (this.loginShake = false), 600);
+  }
+
+  private parseHttpError(err: any, specificStatus: number, specificMsg: string): string {
+    if (err instanceof TimeoutError) return 'El servidor no respondió. Verificá tu conexión.';
+    if (err.status === 0 || err.status === 502 || err.status === 503 || err.status === 504)
+      return 'No se pudo conectar con el servidor.';
+    if (err.status === 500 && !err.error) return 'No se pudo conectar con el servidor.';
+    if (err.status === 500) return 'Error interno del servidor. Intentá de nuevo.';
+    if (specificStatus && err.status === specificStatus)
+      return err.error?.detail ?? specificMsg;
+    return err.error?.detail ?? 'Ocurrió un error inesperado.';
   }
 }
