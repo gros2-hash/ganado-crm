@@ -267,8 +267,44 @@
   }
 }
 
+// ── TABS ─────────────────────────────────────────────────────────────────
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0 24px;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 16px 4px;
+  margin-right: 24px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+
+  svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  &:hover { color: #475569; }
+
+  &.active {
+    color: #1a4731;
+    border-bottom-color: #2d7a4f;
+  }
+}
+
 // ── FORM PANEL ───────────────────────────────────────────────────────────
-.form-panel { padding: 24px; }
+.form-panel { padding: 0; }
+
+.tab-content { padding: 20px 24px 24px; }
 
 .form-panel-header {
   display: flex;

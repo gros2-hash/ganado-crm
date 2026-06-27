@@ -136,22 +136,28 @@
           </div>
         </div>
 
-        <!-- Columna derecha: crear empleado -->
+        <!-- Columna derecha: gestión de personal -->
         <div class="right-col">
           <div class="panel form-panel">
 
-            <!-- Header del panel -->
-            <div class="form-panel-header">
-              <div class="form-panel-icon">
+            <!-- Tabs -->
+            <div class="panel-tabs">
+              <button type="button" class="tab-btn" [class.active]="activeTab === 'empleado'" (click)="activeTab = 'empleado'">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
                 </svg>
-              </div>
-              <div>
-                <h3 class="form-panel-title">Nuevo empleado</h3>
-                <p class="form-panel-sub">Completá los datos para dar de alta</p>
-              </div>
+                Nuevo empleado
+              </button>
+              <button type="button" class="tab-btn" [class.active]="activeTab === 'cuenta'" (click)="activeTab = 'cuenta'">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 21.75 8.25Z" />
+                </svg>
+                Crear cuenta
+              </button>
             </div>
+
+            <!-- ── TAB: NUEVO EMPLEADO ── -->
+            <div class="tab-content" *ngIf="activeTab === 'empleado'">
 
             <!-- Éxito -->
             <div class="success-state" *ngIf="submitSuccess">
@@ -161,18 +167,23 @@
                 </svg>
               </div>
               <h4>¡Empleado creado!</h4>
-              <p>{{ empleado.nombre }} fue dado de alta como <strong>{{ rolLabel() }}</strong> en la zona <strong>{{ empleado.zona }}</strong>.</p>
+              <p>{{ empleado.nombre }} fue dado de alta como <strong>{{ rolLabel() }}</strong> en <strong>{{ departamentoLabel() }}</strong>.</p>
               <button class="btn-reset" (click)="resetForm()">+ Crear otro empleado</button>
             </div>
 
             <!-- Formulario -->
             <form class="emp-form" *ngIf="!submitSuccess" (ngSubmit)="crearEmpleado()">
 
-              <div class="field-error" *ngIf="submitError">
-                Completá todos los campos obligatorios.
+              <div class="field-error" *ngIf="submitErrorMsg">
+                {{ submitErrorMsg }}
               </div>
 
-              <div class="form-row">
+              <div class="form-row two-col">
+                <div class="field">
+                  <label>Cédula <span class="req">*</span></label>
+                  <input type="text" inputmode="numeric" [(ngModel)]="empleado.cedula" name="cedula"
+                    placeholder="Ej. 12345678" autocomplete="off" />
+                </div>
                 <div class="field">
                   <label>Nombre completo <span class="req">*</span></label>
                   <input type="text" [(ngModel)]="empleado.nombre" name="nombre"
@@ -188,6 +199,14 @@
                 </div>
               </div>
 
+              <div class="form-row">
+                <div class="field">
+                  <label>Contraseña <span class="req">*</span></label>
+                  <input type="password" [(ngModel)]="empleado.password" name="password"
+                    placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                </div>
+              </div>
+
               <div class="form-row two-col">
                 <div class="field">
                   <label>Rol <span class="req">*</span></label>
@@ -197,32 +216,92 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label>Zona <span class="req">*</span></label>
-                  <select [(ngModel)]="empleado.zona" name="zona">
+                  <label>Departamento <span class="req">*</span></label>
+                  <select [(ngModel)]="empleado.departamento" name="departamento">
                     <option value="">Seleccionar...</option>
-                    <option *ngFor="let z of zonas" [value]="z">{{ z }}</option>
+                    <option *ngFor="let d of departamentos" [value]="d.value">{{ d.label }}</option>
                   </select>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="field">
-                  <label>Teléfono</label>
+                  <label>Teléfono <span class="hint">formato 09XXXXXXX</span></label>
                   <input type="tel" [(ngModel)]="empleado.telefono" name="telefono"
-                    placeholder="+598 99 000 000" />
+                    placeholder="099123456" />
                 </div>
               </div>
 
-              <button type="submit" class="btn-crear">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <button type="submit" class="btn-crear" [disabled]="submitLoading">
+                <svg *ngIf="!submitLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                Crear empleado
+                <span *ngIf="!submitLoading">Crear empleado</span>
+                <span *ngIf="submitLoading" class="spinner"></span>
               </button>
 
             </form>
-          </div>
-        </div>
+            </div><!-- /tab empleado -->
+
+            <!-- ── TAB: CREAR CUENTA ── -->
+            <div class="tab-content" *ngIf="activeTab === 'cuenta'">
+
+              <!-- Éxito cuenta -->
+              <div class="success-state" *ngIf="cuentaSuccess">
+                <div class="success-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                </div>
+                <h4>¡Cuenta creada!</h4>
+                <p>El usuario <strong>{{ cuenta.email }}</strong> ya puede ingresar al sistema.</p>
+                <button class="btn-reset" (click)="resetCuenta()">+ Crear otra cuenta</button>
+              </div>
+
+              <!-- Formulario cuenta -->
+              <form class="emp-form" *ngIf="!cuentaSuccess" (ngSubmit)="crearCuenta()">
+
+                <div class="field-error" *ngIf="cuentaErrorMsg">
+                  {{ cuentaErrorMsg }}
+                </div>
+
+                <div class="form-row">
+                  <div class="field">
+                    <label>Cédula del empleado <span class="req">*</span></label>
+                    <input type="text" inputmode="numeric" [(ngModel)]="cuenta.cedulaEmpleado" name="cuentaCedula"
+                      placeholder="Ej. 12345678" autocomplete="off" />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="field">
+                    <label>Email <span class="req">*</span></label>
+                    <input type="email" [(ngModel)]="cuenta.email" name="cuentaEmail"
+                      placeholder="juan@valdezcia.com" autocomplete="off" />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="field">
+                    <label>Contraseña <span class="req">*</span></label>
+                    <input type="password" [(ngModel)]="cuenta.password" name="cuentaPassword"
+                      placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                  </div>
+                </div>
+
+                <button type="submit" class="btn-crear" [disabled]="cuentaLoading">
+                  <svg *ngIf="!cuentaLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  <span *ngIf="!cuentaLoading">Crear cuenta</span>
+                  <span *ngIf="cuentaLoading" class="spinner"></span>
+                </button>
+
+              </form>
+            </div><!-- /tab cuenta -->
+
+          </div><!-- /panel -->
+        </div><!-- /right-col -->
 
       </div>
     </div>
