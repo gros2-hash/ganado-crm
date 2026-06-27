@@ -80,5 +80,13 @@ export const routes: Routes = [
         (m) => m.AuditoriaComponent
       ),
   },
-{ path: '**', redirectTo: 'dashboard' },
+  {
+    path: 'admin-usuarios',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/admin-usuarios/admin-usuarios.component').then(
+        (m) => m.AdminUsuariosComponent
+      ),
+  },
+  { path: '**', redirectTo: 'dashboard' },
 ];

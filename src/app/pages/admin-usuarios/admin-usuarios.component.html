@@ -1,0 +1,175 @@
+<div class="crm-layout">
+
+  <app-sidebar [open]="sidebarOpen" />
+
+  <main class="main-content">
+
+    <header class="topbar">
+      <button class="toggle-sidebar" (click)="sidebarOpen = !sidebarOpen">☰</button>
+      <div class="page-title"><h2>Administración de empleados</h2></div>
+      <div class="topbar-right"></div>
+      <app-user-menu />
+    </header>
+
+    <div class="content">
+      <div class="admin-grid">
+
+        <!-- ── Formulario ─────────────────────────────────────────────── -->
+        <div class="panel form-panel">
+
+          <div class="panel-header-row">
+            <div class="panel-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="panel-title">Registrar empleado</h3>
+              <p class="panel-sub">Completá todos los campos para dar de alta</p>
+            </div>
+          </div>
+
+          <!-- Éxito -->
+          <div class="success-state" *ngIf="submitSuccess && ultimoCreado">
+            <div class="success-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+            </div>
+            <h4>¡Empleado registrado!</h4>
+            <p>
+              <strong>{{ ultimoCreado.nombre }}</strong> fue dado de alta como
+              <strong>{{ rolLabel(ultimoCreado.rol) }}</strong> en
+              <strong>{{ deptoLabel(ultimoCreado.departamento) }}</strong>.
+            </p>
+            <button class="btn-secondary" (click)="resetForm()">+ Registrar otro</button>
+          </div>
+
+          <!-- Form -->
+          <form class="emp-form" *ngIf="!submitSuccess" (ngSubmit)="crearEmpleado()">
+
+            <div class="field-error" *ngIf="submitErrorMsg">{{ submitErrorMsg }}</div>
+
+            <div class="form-row two-col">
+              <div class="field">
+                <label>Cédula <span class="req">*</span></label>
+                <input type="text" inputmode="numeric" [(ngModel)]="form.cedula" name="cedula"
+                  placeholder="Ej. 12345678" autocomplete="off" />
+                <span class="hint">7 u 8 dígitos</span>
+              </div>
+              <div class="field">
+                <label>Nombre completo <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="form.nombre" name="nombre"
+                  placeholder="Ej. Juan Rodríguez" autocomplete="off" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Teléfono <span class="req">*</span></label>
+                <input type="tel" [(ngModel)]="form.telefono" name="telefono"
+                  placeholder="099123456" autocomplete="off" />
+                <span class="hint">Formato 09XXXXXXX (9 dígitos)</span>
+              </div>
+            </div>
+
+            <div class="form-row two-col">
+              <div class="field">
+                <label>Rol <span class="req">*</span></label>
+                <select [(ngModel)]="form.rol" name="rol">
+                  <option value="">Seleccioná...</option>
+                  <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Departamento <span class="req">*</span></label>
+                <select [(ngModel)]="form.departamento" name="departamento">
+                  <option value="">Seleccioná...</option>
+                  <option *ngFor="let d of departamentos" [value]="d.value">{{ d.label }}</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" [disabled]="submitLoading">
+              <svg *ngIf="!submitLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span *ngIf="!submitLoading">Registrar empleado</span>
+              <span *ngIf="submitLoading" class="spinner"></span>
+            </button>
+
+          </form>
+        </div>
+
+        <!-- ── Lista ──────────────────────────────────────────────────── -->
+        <div class="panel list-panel">
+
+          <div class="list-header">
+            <div>
+              <h3 class="panel-title">Empleados registrados</h3>
+              <p class="panel-sub">{{ empleados.length }} en el sistema</p>
+            </div>
+            <button class="btn-refresh" (click)="cargarEmpleados()" [disabled]="listLoading" title="Actualizar">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Loading -->
+          <div class="list-loading" *ngIf="listLoading">
+            <span class="spinner-sm"></span>
+            Cargando empleados...
+          </div>
+
+          <!-- Error -->
+          <div class="list-error" *ngIf="listError && !listLoading">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            {{ listError }}
+          </div>
+
+          <!-- Vacío -->
+          <div class="list-empty" *ngIf="!listLoading && !listError && empleados.length === 0">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+            <p>No hay empleados registrados aún.</p>
+          </div>
+
+          <!-- Tabla -->
+          <div class="table-wrapper" *ngIf="!listLoading && empleados.length > 0">
+            <table class="emp-table">
+              <thead>
+                <tr>
+                  <th>Cédula</th>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Rol</th>
+                  <th>Departamento</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let e of empleados">
+                  <td class="td-cedula">{{ e.cedula }}</td>
+                  <td class="td-nombre">{{ e.nombre }}</td>
+                  <td class="td-tel">{{ e.telefono }}</td>
+                  <td>
+                    <span class="badge" [class]="'badge-' + e.rol.toLowerCase()">
+                      {{ rolLabel(e.rol) }}
+                    </span>
+                  </td>
+                  <td class="td-depto">{{ deptoLabel(e.departamento) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
