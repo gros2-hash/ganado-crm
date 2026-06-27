@@ -129,6 +129,8 @@
   grid-template-columns: 1fr 360px;
   gap: 20px;
   align-items: start;
+
+  &.single-col { grid-template-columns: 1fr; }
 }
 
 .left-col, .right-col {
