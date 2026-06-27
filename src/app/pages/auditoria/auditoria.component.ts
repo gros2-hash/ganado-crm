@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { UserMenuComponent } from '../../components/user-menu/user-menu.component';
 import { AuditoriaService } from '../../services/auditoria.service';
 import { AuditLog, AccionAudit, EntidadAudit } from '../../models/auditoria.model';
 
 @Component({
   selector: 'app-auditoria',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, UserMenuComponent],
   templateUrl: './auditoria.component.html',
   styleUrl: './auditoria.component.scss',
 })

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { UserMenuComponent } from '../../components/user-menu/user-menu.component';
 import { ProductoresService } from '../../services/productores.service';
 import { Productor, CategoriaProductor, EstadoProductor,
          MedioContacto, PrioridadContacto } from '../../models/productor.model';
@@ -13,7 +14,7 @@ type SeccionKey = 'contacto' | 'perfil' | 'historial' | 'registrar';
 @Component({
   selector: 'app-productores',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, UserMenuComponent],
   templateUrl: './productores.component.html',
   styleUrl:    './productores.component.scss',
 })

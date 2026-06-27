@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { StatsService, Agente, LoteStats, ProductorStats, ChatbotStats } from '../../services/stats.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { UserMenuComponent } from '../../components/user-menu/user-menu.component';
 
 @Component({
   selector: 'app-estadisticas',
   standalone: true,
-  imports: [CommonModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, RouterModule, SidebarComponent, UserMenuComponent],
   templateUrl: './estadisticas.component.html',
   styleUrl: './estadisticas.component.scss',
 })

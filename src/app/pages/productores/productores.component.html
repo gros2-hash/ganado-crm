@@ -18,6 +18,7 @@
         <button class="btn-nuevo" (click)="abrirNuevo()" *ngIf="modoVista === 'lista'">+ Nuevo</button>
         <button class="btn-volver" (click)="modoVista = 'lista'" *ngIf="modoVista === 'nuevo'">← Volver</button>
       </div>
+      <app-user-menu />
     </header>
 
     <!-- BANNER URGENTES -->

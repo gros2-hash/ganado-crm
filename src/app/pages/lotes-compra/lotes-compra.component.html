@@ -15,42 +15,11 @@
       <div class="topbar-right">
         <button class="btn-nuevo" (click)="abrirNuevo()">+ Nuevo lote</button>
       </div>
+      <app-user-menu />
     </header>
 
     <!-- ═══ LISTA ═══ -->
     <div class="content" *ngIf="modoVista === 'lista'">
-
-      <!-- KPIs -->
-      <div class="kpi-row" *ngIf="stats">
-        <div class="mini-kpi">
-          <span class="mk-icon">📦</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.total }}</span><span class="mk-lbl">Total</span></div>
-        </div>
-        <div class="mini-kpi nuevo">
-          <span class="mk-icon">🆕</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.nuevo }}</span><span class="mk-lbl">Nuevos</span></div>
-        </div>
-        <div class="mini-kpi contactado">
-          <span class="mk-icon">📞</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.contactado }}</span><span class="mk-lbl">Contactados</span></div>
-        </div>
-        <div class="mini-kpi negociacion">
-          <span class="mk-icon">🤝</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.negociacion }}</span><span class="mk-lbl">En negociación</span></div>
-        </div>
-        <div class="mini-kpi cerrado">
-          <span class="mk-icon">✅</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.cerrado }}</span><span class="mk-lbl">Cerrados</span></div>
-        </div>
-        <div class="mini-kpi chatbot">
-          <span class="mk-icon">🤖</span>
-          <div class="mk-body"><span class="mk-val">{{ stats.deChatbot }}</span><span class="mk-lbl">Vía chatbot</span></div>
-        </div>
-        <div class="mini-kpi valor">
-          <span class="mk-icon">💵</span>
-          <div class="mk-body"><span class="mk-val">USD {{ stats.valorTotal | number }}</span><span class="mk-lbl">Valor total</span></div>
-        </div>
-      </div>
 
       <!-- FILTROS -->
       <div class="filtros-bar">
@@ -76,21 +45,20 @@
           (click)="seleccionarLote(l)"
           [class]="'card-estado-' + l.estado"
         >
-          <!-- TOP: ID + badges -->
+          <!-- TOP: estado -->
           <div class="lc-top">
-            <span class="id-badge">{{ l.id }}</span>
             <div class="top-badges">
               <span class="estado-badge {{ l.estado }}">{{ estadoLabel(l.estado) }}</span>
-              <span class="origen-badge {{ l.origen }}">{{ l.origen === 'chatbot' ? '🤖 Chatbot' : '✏️ Manual' }}</span>
             </div>
           </div>
 
-          <!-- HACIENDA: tipo + raza + categoría -->
+          <!-- HACIENDA: tipo + categoría + raza -->
           <div class="lc-hero">
             <span class="hero-tipo">🐄 {{ l.tipoGanado }}</span>
-            <span class="hero-sep">·</span>
+            <span class="hero-sep" *ngIf="l.categoria">·</span>
+            <span class="hero-cat" *ngIf="l.categoria">{{ l.categoria }}</span>
+            <span class="hero-sep">—</span>
             <span class="hero-raza">{{ l.raza }}</span>
-            <span class="hero-cat" *ngIf="l.categoria">— {{ l.categoria }}</span>
           </div>
 
           <!-- MÉTRICAS CLAVE -->
@@ -114,12 +82,6 @@
               <span class="lm-val">{{ valorTotal(l) | number }}</span>
               <span class="lm-lbl">USD total</span>
             </div>
-          </div>
-
-          <!-- CLASIFICACIÓN -->
-          <div class="lc-clasif" *ngIf="l.claseAnimal || l.estadoAnimal">
-            <span class="clasif-chip clase" *ngIf="l.claseAnimal">Clase {{ l.claseAnimal }}</span>
-            <span class="clasif-chip estado-a" *ngIf="l.estadoAnimal">Est. {{ l.estadoAnimal }}</span>
           </div>
 
           <!-- DESCRIPCIÓN (catálogo, 2 líneas) -->

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { UserMenuComponent } from '../../components/user-menu/user-menu.component';
 import { VisualizadorLotesService } from '../../services/visualizador-lotes.service';
 import { LoteVisual } from '../../models/lote-visual.model';
 import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
@@ -11,7 +12,7 @@ import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 @Component({
   selector: 'app-visualizador-lotes',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SafeUrlPipe, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SafeUrlPipe, SidebarComponent, UserMenuComponent],
   templateUrl: './visualizador-lotes.component.html',
   styleUrl: './visualizador-lotes.component.scss',
 })
