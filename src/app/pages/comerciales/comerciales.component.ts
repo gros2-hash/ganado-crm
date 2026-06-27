@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { UserMenuComponent } from '../../components/user-menu/user-menu.component';
 import { ComercialService } from '../../services/comerciales.service';
 import { Comercial, ComercialStats, RolComercial, ZonaComercial } from '../../models/comercial.model';
 
@@ -16,7 +17,7 @@ interface ComercialRow {
 @Component({
   selector: 'app-comerciales',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, UserMenuComponent],
   templateUrl: './comerciales.component.html',
   styleUrl: './comerciales.component.scss',
 })

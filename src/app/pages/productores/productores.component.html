@@ -17,6 +17,7 @@
         <span class="total-badge" *ngIf="modoVista === 'lista'">{{ filtrados.length }} productores</span>
         <button class="btn-nuevo" (click)="abrirNuevo()" *ngIf="modoVista === 'lista'">+ Nuevo</button>
         <button class="btn-volver" (click)="modoVista = 'lista'" *ngIf="modoVista === 'nuevo'">← Volver</button>
+        <app-user-menu />
       </div>
     </header>
 

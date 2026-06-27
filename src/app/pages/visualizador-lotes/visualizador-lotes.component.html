@@ -27,6 +27,7 @@
           <button class="nav-btn" (click)="irAnterior()" [disabled]="indiceActivo === 0" title="Anterior (←)">‹</button>
           <button class="nav-btn" (click)="irSiguiente()" [disabled]="indiceActivo === lotesFiltrados.length - 1" title="Siguiente (→)">›</button>
         </ng-container>
+        <app-user-menu />
       </div>
     </header>
 

@@ -5,6 +5,7 @@ import { LotesCompraService } from '../../services/lotes-compra.service';
 import { LotesVentaService } from '../../services/lotes-venta.service';
 import { ProductoresService } from '../../services/productores.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { UserMenuComponent } from '../../components/user-menu/user-menu.component';
 
 interface Lote {
   id: string; tipo: string; cabezas: number; precioUnitario: number;
@@ -18,7 +19,7 @@ interface Movimiento {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterModule, SidebarComponent],
+  imports: [CommonModule, DatePipe, RouterModule, SidebarComponent, UserMenuComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
