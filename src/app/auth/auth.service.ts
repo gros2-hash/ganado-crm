@@ -17,6 +17,14 @@ interface LoginResponse {
   expiraEnSegundos: number;
 }
 
+export interface RegisterCompletePayload {
+  email: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  departamento: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly TOKEN_KEY = 'crm_token';
@@ -27,6 +35,20 @@ export class AuthService {
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, { email, password })
+      .pipe(tap(res => this.storeSession(res.token)));
+  }
+
+  registerInit(email: string, ci: string, password: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/auth/register`, { email, ci, password });
+  }
+
+  registerVerify(email: string, otp: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/auth/register/verify`, { email, otp });
+  }
+
+  registerComplete(data: RegisterCompletePayload): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/api/auth/register/complete`, data)
       .pipe(tap(res => this.storeSession(res.token)));
   }
 
