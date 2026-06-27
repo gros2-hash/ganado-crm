@@ -12,11 +12,12 @@ import { AuthService } from '../../auth/auth.service';
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
-  username = '';
+  email = '';
   password = '';
   error = '';
   loading = false;
   showPassword = false;
+  shake = false;
 
   constructor(private auth: AuthService, private router: Router) {
     if (this.auth.isAuthenticated()) this.router.navigate(['/dashboard']);
@@ -24,19 +25,25 @@ export class LoginComponent {
 
   onSubmit(): void {
     this.error = '';
-    if (!this.username || !this.password) {
-      this.error = 'Ingresá usuario y contraseña.';
+    if (!this.email || !this.password) {
+      this.error = 'Ingresá email y contraseña.';
       return;
     }
     this.loading = true;
-    setTimeout(() => {
-      const ok = this.auth.login(this.username, this.password);
-      this.loading = false;
-      if (ok) {
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.error = 'Usuario o contraseña incorrectos.';
-      }
-    }, 600);
+    this.auth.login(this.email, this.password).subscribe({
+      next: () => this.router.navigate(['/dashboard']),
+      error: (err) => {
+        this.loading = false;
+        this.password = '';
+        this.error =
+          err.status === 401
+            ? (err.error?.detail ?? 'Credenciales inválidas.')
+            : err.status === 0
+            ? 'No se pudo conectar con el servidor.'
+            : `Error ${err.status}: ${err.error?.detail ?? err.message}`;
+        this.shake = true;
+        setTimeout(() => (this.shake = false), 600);
+      },
+    });
   }
 }
